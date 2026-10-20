@@ -1,0 +1,2443 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--<?oxygen RNGSchema="http://www.oasis-open.org/docbook/xml/5.0/rng/docbook.rng" type="xml"?>-->
+<!DOCTYPE article [
+<!ENTITY % entity SYSTEM "entity-decl.ent">
+%entity;
+]>
+
+<article role="sbp" xmlns="http://docbook.org/ns/docbook" xmlns:xi="http://www.w3.org/2001/XInclude"
+  xmlns:xlink="http://www.w3.org/1999/xlink" version="5.0" xml:id="art-sbp-amdepyc3-sles15sp3"
+  xml:lang="en">
+
+  <info>
+    <title>Optimizing Linux for AMD EPYC™ 9006 Series Processors with SUSE Linux Enterprise 16.1</title>
+    <productname>SUSE Linux Enterprise Server</productname>
+    <productnumber>16.1</productnumber>
+    <dm:docmanager xmlns:dm="urn:x-suse:ns:docmanager">
+      <dm:bugtracker>
+        <dm:url>https://github.com/SUSE/suse-best-practices/issues/new</dm:url>
+        <dm:product>Optimizing Linux for AMD EPYC™ 9006 Series Processors with SUSE Linux Enterprise
+          16.1</dm:product>
+      </dm:bugtracker>
+      <dm:editurl>https://github.com/SUSE/suse-best-practices/edit/main/xml/</dm:editurl>
+    </dm:docmanager>
+
+    <meta name="series">SUSE Best Practices</meta>
+<!--    <meta name="type">Best Practices</meta>-->
+    <meta name="category">
+      <phrase>Tuning &amp; Performance</phrase>
+    </meta>
+    <meta name="task">
+      <phrase>Configuration</phrase>
+    </meta>
+    <meta name="title">Optimizing Linux for AMD EPYC™ 9006 Series Processors with SUSE Linux Enterprise
+      16.1</meta>
+    <meta name="description">Overview of the AMD EPYC* 9006 Series Processors and tuning of
+      computational-intensive workloads on SUSE Linux Enterprise Server 16.1.</meta>
+    <meta name="productname">
+      <productname version="16.1">SLES</productname>
+      <productname version="9006">AMD EPYC*</productname>
+    </meta>
+
+    <meta name="platform">SUSE Linux Enterprise 16.1</meta>
+    <meta name="platform">AMD EPYC™ 9006 Series Processors</meta>
+
+    <authorgroup>
+      <author>
+        <personname>
+          <firstname>Yousaf</firstname>
+          <surname>Kaukab</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Engineering Manager</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Mel</firstname>
+          <surname>Gorman</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Senior Kernel Engineer</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Tony</firstname>
+          <surname>Jones</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Senior Kernel Engineer</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Martin</firstname>
+          <surname>Jambor</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Tool Chain Developer</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Dario</firstname>
+	        <surname>Faggioli</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Virtualization Specialist</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Gabriel</firstname>
+          <surname>Krisman Bertazi</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Senior Kernel Engineer</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Kim</firstname>
+          <surname>Naru</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Engineering Manager</jobtitle>
+          <orgname>AMD</orgname>
+        </affiliation>
+      </author>
+      <!--  <editor>
+        <orgname></orgname>
+        </editor>
+        <othercredit>
+        <orgname></orgname>
+        </othercredit>-->
+    </authorgroup>
+
+    <cover role="logos">
+      <mediaobject>
+        <imageobject>
+          <imagedata fileref="suse.svg" width="4em"/>
+        </imageobject>
+        <textobject><phrase>SUSE logo</phrase></textobject>
+      </mediaobject>
+      <!--   <mediaobject>
+        <imageobject>
+        <imagedata fileref="amd.jpg"/>
+        </imageobject>
+        </mediaobject>-->
+    </cover>
+
+
+    <revhistory xml:id="rh-art-sbp-amdepyc4-sles15sp4">
+      <revision>
+        <date>2025-04-24</date>
+        <revdescription>
+          <para> Virtualization section added</para>
+        </revdescription>
+      </revision>
+      <revision>
+        <date>2024-11-15</date>
+        <revdescription>
+          <para> First version of AMD EPYC 5 processors document</para>
+        </revdescription>
+      </revision>
+    </revhistory>
+
+
+    <abstract>
+
+      <para>The document at hand provides an overview of the AMD EPYC™
+      9006 SP7 and SP8 Series Processors based on Zen 6 and Zen 6c
+      cores. It details how some computational-intensive workloads can
+      be tuned on SUSE Linux Enterprise Server 16.1.</para>
+
+      <para><emphasis role="strong">Disclaimer: </emphasis></para>
+      <para>Documents published as part of
+        the SUSE Best Practices series have been contributed voluntarily by SUSE employees
+        and third parties. They are meant to serve as examples of how particular actions
+        can be performed. They have been compiled with utmost attention to detail. However,
+        this does not guarantee complete accuracy. SUSE cannot verify that actions described
+        in these documents do what is claimed or whether actions described have unintended
+        consequences. SUSE LLC, its affiliates, the authors, and the translators may not
+        be held liable for possible errors or the consequences thereof.
+      </para>
+
+    </abstract>
+  </info>
+
+  <sect1 xml:id="sec-overview">
+    <title>Overview</title>
+
+    <para>The AMD EPYC 9006 Series Processor is the 6th generation of the AMD EPYC server
+    class processor family. It is based on the Zen 6 microarchitecture announced in 2026
+    for two socket variants, SP7 and SP8.  The SP7 socket supports a higher core count with
+    support up to 256 Zen 6c cores (512 threads) with up to 16 channels of DDR5/MRDIMM. The
+    SP8 provides up to 128 cores (256 threads with up to 8 channels of DDR5/MRDIMM).  At the
+    time of writing, 1-socket and 2-socket models are expected to be available from
+    Original Equipment Manufacturers (OEMs). This document provides an overview of
+    the AMD EPYC 9006 Series Processors based on Zen 6 and Zen 6c cores and how
+    computational-intensive workloads can be tuned on SUSE Linux Enterprise Server
+    16.1. </para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-epyc-architecture">
+    <title>AMD EPYC 9006 Series Processor (Zen 6 cores) architecture</title>
+
+    <para><emphasis role="italic">Symmetric multiprocessing (SMP)</emphasis> systems are
+    those that contain two or more physical processing cores. Each core may have two
+    execution threads if <emphasis role="italic">Symmetric multithreading (SMT)</emphasis>
+    is enabled, with some resources being shared between SMT siblings. To minimize access
+    latencies, multiple layers of caches are used with each level being larger but with
+    higher access costs. Cores may share different levels of cache which should be
+    considered when tuning for a workload.</para>
+
+    <para>Historically, a single socket contained several cores sharing a hierarchy of
+    caches and memory channels, and multiple sockets were connected via a memory
+    interconnect. Modern configurations may have multiple dies as a <emphasis
+    role="italic">Multi-Chip Module (MCM)</emphasis> with one set of interconnects within
+    the socket and a separate interconnect for each socket. This means that transfers
+    between some CPUs and memory pairs are faster to access than others, depending on the
+    <quote>distance</quote> between the resources.  This should be considered when tuning
+    for <emphasis role="italic">Non-Uniform Memory Architecture (NUMA)</emphasis> as
+    similar-looking memory accesses may not reach memory with the same access speed
+    characteristics, incurring a variable access penalty.</para>
+
+    <para>The 6th Generation AMD EPYC Processor has an MCM design with up to 9
+    dies on each package. From a topology point of view, this is significantly
+    different to the 1st Generation AMD EPYC Processor design. However, it is
+    similar to the 5th Generation AMD EPYC Processor, with regard to the
+    symmetry of cores inside the same die.  One die is a dedicated central IO
+    die through which all off-chip communication passes through. The basic
+    building block of a compute die is a Core CompleX (CCX) of up to 32 cores
+    with its own L1-L3 cache hierarchy. Similar to the 5th Generation AMD EPYC
+    Processor, one Core Complex Die (CCD) consists of one CCX connected via an
+    Infinity Link to the IO die, as opposed to two CCXs used in the 2nd
+    Generation AMD EPYC Processor. This allows direct communication within a CCD
+    instead of using the IO link maintaining reduced communication and memory
+    access latency.  A 96-core Zen 6 socket therefore consists of 8 CCDs each
+    with a single CCX containing up to 12 cores each, (192 threads with SMT
+    enabled), with one additional IO die for 9 dies in total. </para>
+
+    <para>6th Generation AMD EPYC Processors potentially have a larger
+    L3 cache. In a standard configuration, a 6th Generation AMD EPYC
+    Processor has 128MB L3 cache per CCD. Some CPU chips may also
+    include an AMD V-Cache expansion that can triple the size of the L3
+    cache. This potentially provides a major performance boost to
+    applications as more active data can be stored in low-latency
+    cache. The exact performance impact is variable, but any
+    memory-intensive workload should benefit from having a lower average
+    memory access latency because of a larger cache.</para>
+
+    <para>Communication between the chip and memory happens via the IO die. Each CCD has
+    one dedicated Infinity Fabric link to the IO die. The practical consequence of this
+    architecture versus the 1st Generation AMD EPYC Processor is that the topology is
+    simpler.  The first generation had separate memory channels per die and links between
+    dies giving two levels of NUMA distance within a single socket and a third distance
+    when communicating between sockets. This meant that a two-socket machine for EPYC had 4
+    NUMA nodes (3 levels of NUMA distance). The 2nd Generation AMD EPYC Processor has only
+    2 NUMA nodes (2 levels of NUMA distance) which makes it easier to tune and
+    optimize. The NUMA distances are the same from 3rd to 6th Generation AMD EPYC
+    Processors.</para>
+
+    <para>The IO die has a total of 16 memory controllers supporting DDR5 <emphasis
+    role="italic">Dual Inline Memory Modules (DIMMs)</emphasis> with the maximum supported
+    speed expected to be DDR5-8000 or JEDEC-standard second-generation MRDIMM 12.8G at the
+    time of writing. This implies a peak channel bandwidth of up to 1.6 TB/sec memory
+    bandwidth across a socket. The exact bandwidth depends on the memory technology
+    selected, the number of memory channels populated, how cache is used and the efficiency
+    of the application. Where possible, all memory channels should have a DIMM installed to
+    maximize memory bandwidth.</para>
+
+    <para>While the topologies and basic layout is similar between the 5th and 6th
+    Generation AMD EPYC Processors, there are several micro-architectural differences.  The
+    higher density core count, expanded memory and I/O capabilities makes it capable of
+    scaling more AI agents, virtual machines and workloads per rack.  The <emphasis
+    role="italic">Instructions Per Cycle (IPC)</emphasis> has improved on average for
+    enterprise and cloud workloads and is much higher in AI and high performance computing
+    (HPC), although the exact improvement is workload-dependent.
+      </para>
+
+    <para>Power management on the links is careful to minimize the amount of power
+    required. If the links are idle, the power may be used to boost the frequency of
+    individual cores. Hence, minimizing access is not only important from a memory access
+    latency point of view, but it also has an impact on the speed of individual
+    cores.</para>
+
+    <para>There are up to 128 IO lanes supporting PCIe Gen 6.0 per socket. Lanes can be
+    used as Infinity links, PCI Express links, SATA links (maximum 32 links) or CXL 3.1
+    links (maximum 64 links). The exact number of PCIe 6.0 and configuration links vary by
+    chip and motherboard. This allows very large IO configurations and a high degree of
+    flexibility, given that either IO bandwidth or the bandwidth between sockets can be
+    optimized, depending on the OEM requirements. The most likely configuration is that the
+    number of PCIe links will be the same for 1- and 2-socket machines, given that some
+    lanes per socket will be used for inter-socket communication. While some links must be
+    used for inter-socket communication, adding a socket does not compromise the number of
+    available IO channels. The exact configuration used depends on the platform.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-memory-zen6c-variant">
+    <title>AMD EPYC 9006 Series Processors (Zen 6c cores)</title>
+
+    <para>The AMD EPYC 9006 Series Processors based on Zen 6c cores launched in 2026. While
+    the fundamental microarchitecture is based on the <quote>Zen 6</quote> compute core, it
+    is optimized for density and efficiency.  Its physical layout takes less space and is
+    designed to deliver more performance per watt.  There are some other important
+    differences between it and the AMD EPYC 9006 Series Processors based on Zen 6
+    cores. Both processors are socket-compatible, have the same number of memory channels
+    and the same number of I/O lanes. This means that the processors may be used
+    interchangeably on the same platform with the same limitation that dual-socket
+    configurations must use identical processors. Both processors use the same
+    <emphasis>Instruction Set Architecture (ISA)</emphasis>. This means that code optimized
+    for one processor will run without modification on the other.</para>
+
+    <para>Despite the compatible ISA, the processors are physically different using a
+    manufacturing process focused on increased density for both the CPU core and the
+    physical cache. The L1 and L2 caches have the same capacity. The L3 cache capacity per
+    core is smaller than the capacity of the AMD EPYC 9006 Series Processors based on Zen 6
+    cores as there are more cores placed on each CCD. The basic CCX structure in both
+    processors is similar but each CCD with Zen 6c has 32 cores instead of 12.  This
+    increases the maximum number of cores per socket from 96 cores to 256 cores (512 threads).
+
+    Finally, the <emphasis>Thermal Design Points (TDPs)</emphasis> differ for Zen 6c cores,
+    with different frequency scaling limits and generally a lower peak frequency. While
+    each individual Zen 6c core may achieve less peak performance than the Zen 6 core, the
+    total peak compute throughput available is higher because of the increased number of
+    cores.</para>
+
+    <para>The intended use case and workloads determine which processor is superior. The
+    key advantage of the AMD EPYC 9006 Series Processors based on Zen 6c cores is packing
+    more cores within the same socket. This may benefit cloud or hyperscale environments in
+    that more containers or virtual machines can use uncontested CPUs for their workloads
+    within the same physical machine. As a result, physical space in data centers can
+    potentially be reduced. It may also benefit some HPC workloads that are primarily CPU
+    and memory bound.  For example, some HPC workloads scale to the number of available
+    cores working on data sets that are too large to fit into a typical cache. For such
+    workloads, the AMD EPYC 9006 Series Processors based on Zen 6c cores may be
+    ideal.</para>
+
+  </sect1>
+
+
+  <sect1 xml:id="sec-epyc9006-topology">
+    <title>AMD EPYC 9006 Series Processors topology</title>
+
+    <para><xref linkend="fig-epyc-topology"/> shows the topology of an
+    example two socket Zen 6c machine with a fully populated memory
+    configuration generated with <command>"lstopo-no-graphics --of svg >
+    image.svg"</command>.  The <package>lstopo</package> tool is
+    part of the <package>hwloc</package> package.
+
+    <figure xml:id="fig-epyc-topology">
+      <title>AMD EPYC 9006 Series Processors based on Zen 6c cores Topology</title>
+      <mediaobject>
+        <imageobject role="fo">
+          <imagedata fileref="amd-epyc-6-topology.png" width="100%" format="PNG"/>
+        </imageobject>
+        <imageobject role="html">
+          <imagedata fileref="amd-epyc-6-topology.svg" width="100%" format="SVG"/>
+        </imageobject>
+      </mediaobject>
+    </figure>
+
+    The two <quote>packages</quote> correspond to the two sockets. The
+    CCXs consisting of 32 cores (64 threads) each should be clear, as
+    each CCX/CCD has one L3 cache and each socket has 8 CCX/CCD
+    resulting in 256 cores (512 threads). The links to the IO die are
+    symmetrical to all CCD in the package, but the IO die should be
+    taken into account when splitting a workload to optimize bandwidth
+    to memory. In an example where the IO channels are not heavily used,
+    the focus should be on placing memory related tasks closer, with
+    respect to the cache hierarchy.  If optimizing for IO, though, it is
+    recommended that, where possible, the workload is located on the
+    nodes local to the IO channel.</para>
+
+    <para>The computer output below shows a conventional view of the topology using the
+    <package>numactl</package> tool which is slightly edited for clarity. The CPU IDs that
+    map to each node are reported on the <quote>node X cpus:</quote> lines. They note the
+    NUMA distances on the table at the bottom of the computer output. Node 0 and node 1 are
+    a distance of 32 apart as they are on separate sockets. The distance is not a guarantee
+    of the access latency, it is an estimate of the relative difference. The general
+    interpretation of this distance would suggest that a remote node is 3.2 times longer
+    than a local memory access but the actual latency cost can be different.  </para>
+
+    <screen>epyc:~ # numactl --hardware
+available: 2 nodes (0-1)
+node 0 cpus: 0 .. 255 512 .. 767
+node 0 size: 1031291 MB
+node 0 free: 1028517 MB
+node 1 cpus: 256 ..  511 768 .. 1023
+node 1 size: 1031632 MB
+node 1 free: 1029122 MB
+node distances:
+node     0    1
+   0:   10   32
+   1:   32   10
+    </screen>
+
+    <para>Note that the two sockets displayed are masking some details. There
+       are multiple CCDs and multiple channels meaning that there are slight differences
+       in access latency even to <quote>local</quote> memory. If an application is so sensitive to
+       latency that it needs to be aware of the precise relative distances, then the
+       <emphasis role="italics">Nodes Per Socket (NPS)</emphasis> value can be adjusted
+       in the BIOS. If adjusted, <package>numactl</package> will show additional nodes
+       and the relative distances between them.</para>
+
+    <para>Finally, the cache topology can be discovered in a variety of fashions. In
+      addition to <package>lstopo</package> which can provide the information, the
+      level, size and ID of CPUs that share cache can be identified from the files under
+      <filename>/sys/devices/system/cpu/cpuN/cache</filename>.
+    </para>
+
+  </sect1>
+
+
+  <sect1 xml:id="sec-memory-cpu-binding">
+    <title>Memory and CPU binding</title>
+
+    <para>NUMA is a scalable memory architecture for multiprocessor systems that can reduce
+      contention on a memory channel. A full discussion on tuning for NUMA is beyond the scope for
+      this document. But the document <quote>A NUMA API for Linux</quote> at <link
+        xlink:href="https://halobates.de/numaapi3.pdf"></link> provides a valuable introduction.</para>
+
+    <para>The default policy for programs is the <quote>local policy</quote>. A program which calls
+        <command>malloc()</command> or <command>mmap()</command> reserves virtual address space but
+      does not immediately allocate physical memory. The physical memory is allocated the first time
+      the address is accessed by any thread and, if possible, the memory will be local to the
+      accessing CPU. If the mapping is of a file, the first access may have occurred at any time in
+      the past and there are no guarantees about locality.</para>
+
+    <para>When memory is allocated to a node, it is less likely to be moved later if a thread
+      changes to a CPU on another node or if multiple programs are remote-accessing the data, unless
+      <emphasis role="italic">Automatic NUMA Balancing (NUMAB)</emphasis> is enabled (see <xref
+      linkend="sec-auto-numa-balancing"/>).  When NUMAB is enabled, unbound process accesses are
+      sampled and if there are enough remote accesses, the data will be migrated to local memory. This
+      mechanism is not perfect and incurs overhead of its own.  Therefore, it can be important for
+      performance that thread and process migrations between nodes are minimized and for memory
+      placement to be carefully considered and tuned.</para>
+
+    <para>The <package>taskset</package> tool is used to set or get the CPU affinity for new and
+      existing processes. An example usage is to confine a new process only to CPUs local to one node.
+      Whenever possible, local memory will be used. But if the total required memory is larger than
+      the node, then remote memory can still be used. For optimal performance, it is then recommended
+      to size the workload such that it fits in the node. This avoids the data being
+      paged out when <package>kswapd</package> wakes to reclaim memory from the local node.</para>
+
+    <para><package>numactl</package> controls both memory and CPU policies for the processes that it
+      launches but can also modify existing processes. In many aspects, the parameters are easier to
+      specify than <package>taskset</package>. For example, it can bind a task to all CPUs on a
+      specified node without the user having to specify each individual CPU.  Most importantly, it can
+      set a different memory allocation policy without requiring application awareness.</para>
+
+    <para>By configuring different policies, a program can request that a specific node be preferred
+    for all memory allocations.  This is typically used in combination with binding the task to the
+    CPUs local to that node. If a workload’s memory requirements are larger than a single node and
+    predictable performance is required, then the <quote>interleave</quote> policy is recommended.
+    It will round-robin allocations from allowed nodes, providing suboptimal but predictable average
+    access latency to the main memory. More importantly, interleaving reduces the probability of the
+    operating system having to reclaim data belonging to a larger task.</para>
+
+    <para>Further improvements can be made to memory access latency by binding a workload
+    to a single CCD within a node. As L3 caches are shared within a CCD on 3rd Generation
+    and newer AMD EPYC Processors, binding a workload to a CCD avoids L3 cache misses
+    caused by workload migration. This is an important difference from the 2nd Generation
+    AMD EPYC Processor which favored binding within a CCX.</para>
+
+    <para>In most respects, the guidance for optimal bindings for cache and nodes remains
+      the same between from 3rd to 6th Generation AMD EPYC Processors. However, with SUSE
+      Linux Enterprise 16.1, the necessity to bind specifically to the L3 cache for
+      optimal performance is relaxed. The CPU scheduler in SUSE Linux Enterprise 16.1 has
+      superior knowledge of the cache topology of all generations of the AMD EPYC Processors
+      and how to balance load between CPU caches, NUMA nodes and memory channels.</para>
+
+      <note>
+        <title>CPU Scheduler Awareness of Cache Topology</title>
+
+        <para>With SUSE Linux Enterprise 16.1 having superior knowledge of the CPU cache
+          topology and how to balance load, tuning specifically has a smaller impact to performance
+          for a given workload. This is <emphasis role="strong">not</emphasis> a limitation of the
+          operating system. It is a side-effect of the baseline performance being improved on
+          AMD EPYC Processors in general.</para>
+
+      </note>
+
+    <para>See examples below on how <package>taskset</package> and <package>numactl</package> can
+      be used to start commands bound to different CPUs depending on the topology.</para>
+
+    <screen># Run a command bound to CPU 1
+epyc:~ # taskset -c 1 [command]
+
+# Run a command bound to CPUs belonging to node 0
+epyc:~ # taskset -c `cat /sys/devices/system/node/node0/cpulist` [command]
+
+# Run a command bound to CPUs belonging to nodes 0 and 1
+epyc:~ # numactl --cpunodebind=0,1 [command]
+
+# Run a command bound to CPUs that share L3 cache with cpu 1
+epyc:~ # taskset -c `cat /sys/devices/system/cpu/cpu1/cache/index3/shared_cpu_list` [command]</screen>
+
+
+    <sect2 xml:id="sec-tuning-without-binding">
+      <title>Tuning for memory locality</title>
+
+      <para>The ability to use local memory where possible and remote
+      memory if necessary is valuable. But there are cases where it is
+      imperative that local memory always be used. If this is the case,
+      the first priority is to bind the task to that node. The command
+      <command>sysctl vm.zone_reclaim_mode=1</command> can be used to
+      aggressively reclaim memory if local memory is not
+      available. </para>
+
+      <note>
+        <title>Potential Hazard with <filename>vm.zone_reclaim_mode</filename></title>
+
+        <para>While this option is good from a locality perspective, it can incur high costs because
+          of stalls related to reclaim and the possibility that data from the task will be
+          reclaimed. Treat this option with a high degree of caution and test accordingly.</para>
+      </note>
+    </sect2>
+
+    <sect2 xml:id="sec-hazards-cpu-binding">
+      <title>Hazards with CPU binding</title>
+
+      <para>There are three major hazards to consider with CPU binding.</para>
+
+      <para>The first to watch for is remote memory nodes being used when the process is not
+        allowed to run on CPUs local to that node. The scenarios where this can occur
+        are outside the scope of this paper. However, a common reason is an IO-bound thread
+        communicating with a kernel I/O thread on a remote node bound to the IO controller.
+        In such a setup, the data buffers managed by the application are stored in remote memory
+        incurring a higher access cost for each I/O.</para>
+
+      <para>While tasks may be bound to CPUs, the resources they are accessing, such as network or
+      storage devices, may not have interrupts routed locally. <package>irqbalance</package>
+      generally makes appropriate decisions to distribute the load across cores. But for workload
+      cases where the network or I/O is extremely high-performing or the application has very low
+      latency requirements, it may be necessary to disable <package>irqbalance</package> using
+      <command>systemctl</command>. When that is done, the IRQs affinity for the target device must
+      be routed manually to CPUs local to the target workload for optimal performance. This can
+      be done by identifying the correct number of the IRQ of the device and writing the correct CPU
+      mask to the following file:</para>
+
+      <screen>
+# Route the delivery of IRQ 117 to CPUs 0, 1, 2 and 3
+epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
+
+
+      <para>The second hazard is that guides about CPU binding tend to focus on binding to a single
+      CPU. This is not always optimal when the task communicates with other threads, as fixed
+      bindings potentially miss an opportunity for the processes to use idle CPUs that share a
+      common cache. This is particularly true when dispatching I/O, be it to disk or a network
+      interface, where a task may benefit from being able to migrate close to the related
+      threads. It also applies to pipeline-based communicating threads for a computational
+      workload. Hence, initial focus should be on binding to CPUs sharing the same L3 cache. Then
+      consider whether to bind based on an L1/L2 cache or a single CPU using the primary metric of
+      the workload to establish whether the tuning is appropriate.</para>
+
+      <para>The third and final hazard is similar: if many tasks are bound to a smaller set of CPUs,
+      then those CPUs could become task-saturated even though there is enough CPU capacity
+      available in the machine.</para>
+
+    </sect2>
+
+    <sect2 xml:id="sec-cpusets-memory-control-groups">
+      <title>cpusets and memory control groups</title>
+
+      <para><emphasis role="italic">cpusets</emphasis> control groups allow the CPU processing
+      capacity of machine to be partitioned in a predictable and configurable fashion, giving each
+      set of tasks a pre-determined slice of the computing resources. The sets may overlap with each
+      other, which mean they suffer from the same problems discussed earlier in this document for
+      CPU affinities. In case there is no overlap, the set can be switched to
+      <quote>exclusive</quote> mode which maintains it in complete isolation with relatively little
+      overhead. Similarly, this feature is well suited when a primary workload must be protected
+      from interference from unrelated low-priority tasks. In such cases, the low-priority tasks
+      should be placed in a different cpuset with less resources. The caveat with cpusets is that
+      the overhead is higher than using scheduler and memory policies. By default, the accounting
+      code for cpusets is completely disabled. But when a single cpuset is created, there is a
+      second layer of checks against scheduler and memory policies introducing overhead in those
+      paths.</para>
+
+      <para>Similarly, memory control groups <emphasis role="italic">(memcg)</emphasis> can be used
+      to limit the amount of memory available to a set of processes. When the limits are exceeded,
+      the memory will be reclaimed from tasks within the <emphasis role="italic">memcg</emphasis>,
+      without interfering with other sets.  This is ideal for ensuring there is no memory reclaim
+      interference between two or more sets of tasks. Similar to <emphasis
+      role="italic">cpusets</emphasis>, there is some management overhead incurred. For this reason,
+      if tasks can simply be isolated on a NUMA boundary, it is the preferred method from a
+      performance perspective. The major hazard with <emphasis role="italic">memcg</emphasis> is
+      that with less memory available for the set, the limits are more likely to be exceeded which
+      results in a costly stall of the set tasks, while the system reclaims memory. </para>
+
+      <note>
+        <para>Without <emphasis role="italic">memcg</emphasis>, when memory gets low, the global
+        reclaim daemon does work in the background, and if the reclaim happens quickly enough, no
+        stalls are incurred. When using <package>memcg</package>, observe the
+        <package>allocstall</package> counter in <filename>/proc/vmstat</filename> as this can
+        detect early signs that stalling is likely to occur in the near future.</para>
+
+      </note>
+
+    </sect2>
+  </sect1>
+
+  <sect1 xml:id="sec-hp-storage-interrupt-affinity">
+    <title>High performance storage devices and interrupt affinity</title>
+
+    <para>High performance storage devices like <emphasis role="italic">Non-Volatile Memory Express
+        (NVMe)</emphasis> or <emphasis role="italic">Serial Attached SCSI (SAS)</emphasis>
+      controller are designed to take advantage of parallel IO submission. These devices typically
+      support a large number of submit and receive queues, which are tied to <emphasis role="italic"
+        >MSI-X</emphasis> interrupts. Ideally, these devices should provide as many MSI-X vectors as
+      there are CPUs in the system. To achieve the best performance, each MSI-X vector should be assigned
+      to an individual CPU.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-auto-numa-balancing">
+    <title>Automatic NUMA balancing</title>
+
+    <para>Automatic NUMA Balancing (NUMAB) is a feature that identifies and relocates
+      pages that are being accessed remotely for applications that are not NUMA-aware. There
+      are cases where it is impractical or impossible to specify policies. In such cases, the
+      balancing should be sufficient for throughput-sensitive workloads, but on occasion,
+      NUMAB may be considered hazardous as it incurs a cost. Under ideal conditions,
+      an application is NUMA aware and uses memory policies to control what memory is
+      accessed and NUMAB simply ignores such regions. However, even if an application does
+      not use memory policies, it is possible that the application still accesses mostly
+      local memory and NUMAB adds overhead confirming that accesses are local which is an
+      unnecessary cost. For latency-sensitive workloads, the sampling for NUMA balancing may
+      be too unpredictable and would prefer to incur the remote access cost or interleave
+      memory instead of using NUMA. The final corner case where NUMA balancing is a hazard
+      happens when the number of runnable tasks always exceeds the number of CPUs in a
+      single node. In this case, the load balancer (and potentially affine wakes) may
+      pull tasks away from the preferred node as identified by NUMAB resulting in
+      excessive sampling and migrations.</para>
+
+    <para>If the workloads can be manually optimized with policies, then consider disabling NUMAB
+      by specifying <command>numa_balancing=disable</command> on the kernel
+      command line or via <command>sysctl kernel.numa_balancing</command>. The same applies if
+      it is known that the application is mostly accessing local memory.</para>
+
+    <note>
+      <title>Changes to Automatic NUMA Balancing</title>
+
+      <para>While a disconnect between CPU Scheduler and NUMA Balancing placement decisions
+        still potentially exists in SUSE Linux Enterprise 16.1 when the machine is heavily
+        overloaded, the impact is much reduced relative to previous releases for most
+        scenarios. The placement decisions made by the CPU Scheduler and NUMA Balancing
+        are now coupled. Situations where the CPU scheduler and NUMA Balancing make
+        opposing decisions are relatively rare.</para>
+
+    </note>
+
+
+  </sect1>
+
+  <sect1 xml:id="sec-evaluating-_workloads">
+    <title>Evaluating workloads</title>
+
+    <para>The first and foremost step when evaluating how a workload should be tuned is
+      to establish a primary metric such as latency, throughput, operations per second
+      or elapsed time. When each tuning step is considered or applied, it is critical
+      that the primary metric be examined before conducting any further analysis. This is to avoid
+      intensive focus on a relatively wrong bottleneck. Make sure that the metric is measured
+      multiple times to ensure that the result is reproducible and reliable within reasonable
+      boundaries. When that is established, analyze how the workload is using different system
+      resources to determine what area should be the focus. The focus in this paper is on how
+      CPU and memory is used. But other evaluations may need to consider the IO subsystem,
+      network subsystem, system call interfaces, external libraries, etc. The methodologies
+      that can be employed to conduct this are outside the scope of this paper. But the book
+      <quote>Systems Performance: Enterprise and the Cloud</quote> by Brendan Gregg (see <link
+      xlink:href="http://www.brendangregg.com/systems-performance-2nd-edition-book.html"></link>)
+      is a recommended primer on the subject.</para>
+
+    <sect2 xml:id="sec-cpu-utilization-saturation">
+      <title>CPU utilization and saturation</title>
+
+      <para>Decisions on whether to bind a workload to a subset of CPUs require that the CPU
+        utilization and any saturation risk is known. Both the <command>ps</command> and
+          <command>pidstat</command> commands can be used to sample the number of threads in a
+        system. Typically, <command>pidstat</command> yields more useful information with the
+        important exception of the run state. A system may have many threads, but if they are idle,
+        they are not contributing to utilization. The <command>mpstat</command> command can
+        report the utilization of each CPU in the system. </para>
+
+      <para>High utilization of a small subset of CPUs may be indicative of a single-threaded
+        workload that is pushing the CPU to the limits and may indicate a bottleneck. Conversely,
+        low utilization may indicate a task that is not CPU-bound, is idling frequently or is
+        migrating excessively. While each workload is different, the low CPU utilization may suggest the
+        workload could be run on a smaller subset of CPUs to reduce latencies because of either migrations
+        or remote accesses. When utilization is high, it is important to determine if the system
+        could be saturated. The <package>vmstat</package> tool reports the number of runnable tasks
+        waiting for a CPU in the <quote>r</quote> column where any value over 1 indicates that wakeup
+        latencies may be incurred. While the exact wakeup latency can be calculated using trace
+        points, knowing that there are tasks queued is an important step. If a system is saturated,
+        it may be possible to tune the workload to use fewer threads.</para>
+
+      <para>Overall, the initial intent should be to use CPUs from as few NUMA nodes as possible to
+      reduce access latency. However, there are exceptions. The AMD EPYC 9006 Series Processor has a
+      large number of high-speed memory channels to main memory, so consider the workload thread
+      activity. If they are cooperating threads or sharing data, affine them to the same nodes and
+      use as few nodes as possible to minimize cross-node memory accesses. If the threads are
+      completely independent with no shared data, it may be best to isolate them on a subset of CPUs
+      from different nodes. This is to maximize the number of available memory channels and
+      throughput to main memory, as well as to limit the competition for resources like memory
+      caches. For some computational workloads, it may be possible to use hybrid models such as MPI
+      for parallelization across nodes and OpenMP for threads within nodes.</para>
+
+        <note>
+          <title>Updating tuning for AMD EPYC 9006 Series Processor</title>
+
+          <para>It is expected that tuning based on the AMD EPYC 7003 Series Processor
+             will also usually perform optimally on later series processors including AMD EPYC 9006
+             series. The main consideration is to account for potential differences in L3 cache sizes
+             because of AMD V-Cache if workloads are tuned specifically for cache size. Also, keep in
+             mind that CPU bindings based on caches may potentially be relaxed on SUSE Linux Enterprise
+             16.1.</para>
+        </note>
+    </sect2>
+
+    <sect2 xml:id="sec-transparent-huge-pages">
+      <title>Transparent Huge Pages</title>
+
+      <para>Huge pages are a feature that can improve performance in many cases. This is
+        achieved by reducing the number of page faults, the cost of translating virtual
+        addresses to physical addresses because of fewer layers in the page table and
+        being able to cache translations for a larger portion of memory. <emphasis
+        role="italic">Transparent Huge Pages (THP)</emphasis> is supported for private
+        anonymous memory that automatically backs mappings with huge pages where anonymous
+        memory could be allocated as <command>heap</command>, <command>malloc()</command>,
+        <command>mmap(MAP_ANONYMOUS)</command>, etc. There is also support for using THP
+        pages backed by <command>tmpfs</command> which can be configured at mount time
+        using the <parameter>huge=</parameter> mount option. While the THP feature has
+        existed for a long time, it has evolved significantly.</para>
+
+      <para>Many tuning guides recommend disabling THP because of problems with early
+        implementations. Specifically, when the machine was running for long enough, the
+        use of THP could incur severe latencies and could aggressively reclaim memory in
+        certain circumstances. These problems were resolved by the time SUSE Linux
+        Enterprise Server 15 SP2 was released, and this is still the case for SUSE Linux
+        Enterprise Server 16.1. This means there are no good grounds for automatically
+        disabling THP because of severe latency issues without measuring the impact. However,
+        there are exceptions that are worth considering for specific workloads.</para>
+
+      <para>Some high-end in-memory databases and other applications aggressively use
+        <command>mprotect()</command> to ensure that unprivileged data is never leaked. If
+        these protections are at the base page granularity, then there may be many THP splits
+        and rebuilds that incur overhead. It can be identified if this is a potential
+        problem by using <command>strace</command> or <command>perf trace</command> to
+        detect the frequency and granularity of the system call. If they are high-frequency,
+        consider disabling THP. It can also be sometimes inferred from observing the
+        <command>thp_split</command> and <command>thp_collapse_alloc</command> counters
+        in <filename>/proc/vmstat</filename>.</para>
+
+      <para>Workloads that sparsely address large mappings may have a higher memory
+        footprint when using THP. This could result in premature reclaim or fallback to
+        remote nodes. An example would be HPC workloads operating on large sparse matrices. If
+        memory usage is much higher than expected, compare memory usage with and without
+        THP to decide if the trade-off is not worthwhile. This may be critical on AMD EPYC
+        7003, 9004 and 9006 Series Processor given that any spillover will congest the Infinity
+        links and potentially cause cores to run at a lower frequency. </para>
+
+      <note>
+        <title>Sparsely addressed memory</title>
+        <para>This is specific to sparsely addressed memory. A secondary hint for this case may be
+          that the application primarily uses large mappings with a much higher
+          <emphasis role="strong">Virtual Size</emphasis>  (VSZ, see <xref linkend="sec-memory-utilization-saturation"/>) than <emphasis role="strong">Resident Set Size</emphasis> (RSS).
+          Applications which densely address memory benefit from the use of THP by achieving greater
+          bandwidth to memory.</para>
+      </note>
+
+      <para>Parallelized workloads that operate on shared buffers with thread counts
+        exceeding the number of available CPUs on a single node may experience a slowdown
+        with THP if the granularity of partitioning is not aligned to the huge page. The
+        problem is that if a large shared buffer is partitioned on a 4K boundary, then false
+        sharing may occur whereby one thread accesses a huge page locally and other threads
+        access it remotely. If this situation is encountered, the granularity of sharing should
+  be increased to the THP size. But if that is not possible, disabling THP is an option.</para>
+
+      <para>Applications that are extremely latency-sensitive or must always perform in a
+        deterministic fashion can be hindered by THP. While there are fewer faults, the time for
+        each fault is higher as memory must be allocated and cleared before being visible. The
+        increase in fault times may be in the microsecond granularity. Ensure this is a relevant
+        problem as it typically only applies to extremely latency-sensitive applications. The
+        secondary problem is that a kernel daemon periodically scans a process looking for
+        contiguous regions that can be backed by huge pages. When creating a huge page, there is a
+        window during which that memory cannot be accessed by the application and new mappings
+        cannot be created until the operation is complete. This can be identified as a problem with
+        thread-intensive applications that frequently allocate memory. In this case, consider
+        effectively disabling <package>khugepaged</package> by setting a large value in
+          <filename>/sys/kernel/mm/transparent_hugepage/khugepaged/alloc_sleep_millisecs</filename>.
+        This will still allow THP to be used opportunistically while avoiding stalls when calling
+          <command>malloc()</command> or <command>mmap()</command>.</para>
+
+      <para>THP can be disabled. To do so, specify
+        <command>transparent_hugepage=never</command> on the kernel command line,
+        at runtime via <filename>/sys/kernel/mm/transparent_hugepage/enabled</filename>
+        or on a per-process basis by using a wrapper to execute the workload that calls
+        <command>prctl(PR_SET_THP_DISABLE)</command>.</para>
+
+    </sect2>
+
+    <sect2 xml:id="sec-user-kernel-footprint">
+      <title>User/kernel footprint</title>
+
+      <para>Assuming an application is mostly CPU or memory-bound, it is useful to determine if the
+        footprint is primarily in user space or kernel space. This gives a hint where tuning should
+        be focused. The percentage of CPU time can be measured on a coarse-grained fashion using
+        <command>vmstat</command> or a fine-grained fashion using <command>mpstat</command>. If an
+        application is mostly spending time in user space, then the focus should be on tuning the
+        application itself. If the application is spending time in the kernel, then it should be
+        determined which subsystem dominates. The <command>strace</command> or <command>perf
+          trace</command> commands can measure the type, frequency and duration of system calls as
+        they are the primary reasons an application spends time within the kernel. In some cases, an
+        application may be tuned or modified to reduce the frequency and duration of system calls.
+        In other cases, a profile is required to identify which portions of the kernel are most
+        relevant as a target for tuning.</para>
+    </sect2>
+
+    <sect2 xml:id="sec-memory-utilization-saturation">
+      <title>Memory utilization and saturation</title>
+
+      <para>The traditional means of measuring memory utilization of a workload is to
+        examine the <emphasis role="italic">Virtual Size (VSZ)</emphasis> and
+        <emphasis role="italic">Resident Set Size (RSS)</emphasis>. This can be done by
+        using either the <command>ps</command> or <command>pidstat</command> tool.
+        This is a reasonable first step but is potentially misleading when shared memory
+        is used and multiple processes are examined. VSZ is simply a measure of memory space reservation and
+        is not necessarily used. RSS may be double accounted if it is a shared segment
+        between multiple processes. The file <filename>/proc/pid/maps</filename> can be
+        used to identify all segments used and whether they are private or shared. The file
+        <filename>/proc/pid/smaps</filename> and <filename>/proc/pid/smaps_rollup</filename>
+        reveals more detailed information including the <emphasis role="italic">Proportional
+        Set Size (PSS)</emphasis>. PSS is an estimate of RSS except it is divided
+        between the number of processes mapping that segment, which can give a more
+        accurate estimate of utilization. Note that the <filename>smaps</filename> and
+        <filename>smaps_rollup</filename> files are very expensive to read and should not be
+        monitored at a high frequency. This is especially the case if workloads are using large amounts of
+        address space, many threads or both. Finally, the <emphasis role="italic">Working Set
+        Size (WSS)</emphasis> is the amount of active memory required to complete computations
+        during an arbitrary phase of a program’s execution. It is not a value that can be
+        trivially measured. But conceptually it is useful as the interaction between WSS
+        relative to available memory affects memory residency and page fault rates.</para>
+
+      <para>On NUMA systems, the first saturation point is a node overflow when the
+        <quote>local</quote> policy is in effect. Given no binding of memory, when a node is
+        filled, a remote node’s memory will be used transparently and background reclaim
+        will take place on the local node. Two consequences of this are that remote access
+        penalties will be used and old memory from the local node will be reclaimed. If the
+        WSS of the application exceeds the size of a local node, then paging and re-faults
+        may be incurred.</para>
+
+      <para>The first item to identify is whether a remote node overflow occurred, which is
+        accounted for in <filename>/proc/vmstat</filename> as the <command>numa_hit</command>,
+        <command>numa_miss</command>, <command>numa_foreign</command>,
+        <command>numa_interleave</command>, <command>numa_local</command> and
+        <command>numa_other counters</command>:</para>
+
+      <itemizedlist>
+        <listitem>
+          <para><command>numa_hit</command> is incremented when an allocation uses the preferred
+            node where preferred may be either a local node or one specified by a memory
+            policy.</para>
+        </listitem>
+        <listitem>
+          <para><command>numa_miss</command> is incremented when an alternative node is used to
+            satisfy an allocation.</para>
+        </listitem>
+        <listitem>
+          <para><command>numa_foreign</command> is accounted against a
+          node that was preferred. It is a subtle distinction from
+          <command>numa_miss</command> that is rarely useful.</para>
+        </listitem>
+        <listitem>
+          <para><command>numa_interleave</command> is incremented when an interleave policy was used
+            to select allowed nodes in a round-robin fashion.</para>
+        </listitem>
+        <listitem>
+          <para><command>numa_local</command> increments when a local node is used for an allocation
+            regardless of policy.</para>
+        </listitem>
+        <listitem>
+          <para><command>numa_other</command> is used when a remote node is used for an allocation
+            regardless of policy.</para>
+        </listitem>
+      </itemizedlist>
+
+      <para>For the local memory policy, the <command>numa_hit</command> and
+        <command>numa_miss</command> counters are the most important to pay attention
+        to. An application that is allocating memory that starts incrementing the
+        <command>numa_miss</command> implies that the first level of saturation has
+        been reached. If monitoring the <filename>proc</filename> is undesirable, then the
+        <command>numastat</command> provides the same information. If this is observed on the
+        AMD EPYC 9006 Series Processor, it may be valuable to bind the application to nodes
+        that represent dies on a single socket. If the ratio of hits to misses is close to 1,
+        consider an evaluation of the interleave policy to avoid unnecessary reclaim.</para>
+
+      <note>
+        <title>NUMA statistics</title>
+
+        <para>These NUMA statistics only apply at the time a physical page is allocated and are not
+          related to the reference behavior of the workload. For example, if a task running on node
+          0 allocates memory local to node 0, then it will be accounted for as a
+            <command>numa_hit</command> in the statistics. However, if the memory is shared with a
+          task running on node 1, all the accesses may be remote, which is a miss from the
+          perspective of the hardware but not accounted for in <filename>/proc/vmstat</filename>.
+          Detecting remote and local accesses at the hardware level requires using the hardware’s
+            <emphasis role="italic">Performance Monitoring Unit</emphasis> to detect. See perf-mem(1) for further details.</para>
+      </note>
+
+      <para>When the first saturation point is reached, reclaim will be active. This
+        can be observed by monitoring the <command>pgscan_kswapd</command> and
+        <command>pgsteal_kswapd</command> counters in <filename>/proc/vmstat</filename>. If
+        this is matched with an increase in major faults or minor faults, then it may
+        be indicative of severe thrashing. In this case, the interleave policy should be
+        considered. An ideal tuning option is to identify if shared memory is the source
+        of the usage. If this is the case, then interleave the shared memory segments. This
+        can be done in some circumstances using <command>numactl</command> or by modifying
+        the application directly.</para>
+
+      <para>More severe saturation is observed if the <command>pgscan_direct</command>
+        and <command>pgsteal_direct</command> counters are also increasing. These counters indicate
+        that the application is stalling while memory is being reclaimed. If the application
+        was bound to individual nodes, increasing the number of available nodes will
+        alleviate the pressure. If the application is unbound, it indicates that the WSS
+        of the workload exceeds all available memory. It can only be alleviated by tuning
+        the application to use less memory or increasing the amount of RAM available.</para>
+
+      <para>A more generalized view of resource pressure for CPU, memory and IO can be
+        measured using the kernel <emphasis role="italic">Pressure
+        Stall Information</emphasis> feature enabled with the command
+        line <command>psi=1</command>. When enabled, proc files under
+        <filename>/proc/pressure</filename> show if some or all active tasks were stalled
+        recently contending on a resource. This information is not always available in
+        production. But if the information is available, the memory pressure information may be used to guide
+        whether a deeper analysis is necessary and which resource is the bottleneck.</para>
+
+      <para>As before, whether to use memory nodes from one socket or two sockets depends
+        on the application. If the individual processes are independent, either socket
+        can be used. Where possible, keep communicating processes on the same socket
+        to maximize memory throughput while minimizing the socket interconnect traffic.</para>
+
+    </sect2>
+
+    <sect2 xml:id="sec-other-resources">
+      <title>Other resources</title>
+
+      <para>The analysis of other resources is outside the scope of this paper. However,
+        a common scenario is that an application is IO-bound. A superficial check can be made
+        using the <command>vmstat</command> tool. This tool checks what percentage of CPU time
+        is spent idle combined with the number of processes that are blocked and the values in
+        the <emphasis role="strong">bi</emphasis> and <emphasis role="strong">bo</emphasis>
+        columns. Similarly, if PSI is enabled, then the IO pressure file will show whether
+        some or all active tasks are losing time because of lack of resources. Further analysis
+        is required to determine if an application is IO rather than CPU- or memory-bound.
+        However, this is a sufficient check to start with. </para>
+
+    </sect2>
+
+  </sect1>
+  <sect1 xml:id="sec-power-management">
+    <title>Power management</title>
+
+    <para>Modern CPUs balance power consumption and performance by
+    varying the operating clock frequency and voltage based on the
+    historical utilization and the requisites of the current workload.
+    Usually, the platform firmware and the operating system cooperate to
+    define the appropriate balance between power consumption and
+    performance while staying within the thermal envelope of the system.
+    The scaling calculation is further complicated by the fact that, if
+    individual cores are idle and running at low power, the additional
+    power can be used to boost the performance of active cores. This
+    means it  is never a straightforward balance between power
+    consumption and performance. More complexity is added between the
+    AMD EPYC 7003 and the 9006 Series Processors whereby spare power may
+    be used to boost either cores or the Infinity links.</para>
+
+    <para>The 6th Generation AMD EPYC Processor is capable of making
+    adjustments to voltage and frequency on a much more fine-grained and
+    continuous levels than the old ACPI-based P-state levels approach in
+    previous generations, by using the dedicated Collaborative Processor
+    Performance Control (CPPC) interface available in the platform.  On
+    SUSE Linux Enterprise Server 16.1, the cpufreq subsystem uses the
+    <command>amd-pstate</command> driver by default for AMD EPYC 9006
+    Series Processors.  This driver leverages the CPPC with Energy
+    Performance Preference (EPP) hints to select appropriate hardware
+    frequencies for the workload. The <command>amd-pstate</command>
+    driver can be configured to operate in 3 different modes: Active
+    (default), Passive and Guided: </para>
+
+    <itemizedlist>
+      <listitem>
+	<para>In the Active mode, the driver just provides a
+	hint about the desired performance mode to the CPPC, which is the
+	sole responsible for calculating the runtime workload and
+	adjusting the realtime cores frequency according to the power
+	supply and thermal, core voltage and some other hardware
+	conditions. This is the default mode.</para>
+      </listitem>
+      <listitem>
+	<para>
+	  In the Passive mode, the Linux driver defines a finer-grained
+	  percentage target of the nominal maximum performance of the
+	  CPU and the CPPC will attempt to scale frequency to reach that
+	  performance or higher, while still bounded by the thermal
+	  requirements of the platform.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  In the Guided mode, the driver requests minimum and maximum
+	  performance level and the platform autonomously selects a
+	  frequency in this range that is appropriate to the current
+	  workload.
+	</para>
+      </listitem>
+    </itemizedlist>
+
+    <para>
+      The amd-pstate driver can be used with all available frequency
+      policies in the system.  It will inform the cpufreq governor of
+      maximum and minimum operating frequencies supported by the
+      hardware and configure the firmware accordingly.</para>
+
+    <note>
+      <title>Configuring and verifying the amd-pstate mode</title>
+
+      <para>The current configured mode of the amd-pstate driver can be
+      discovered and modified by reading and writing from  /sys/devices/system/cpu/amd_pstate/status</para>
+      <screen>
+	$ cat /sys/devices/system/cpu/amd_pstate/status
+	active
+
+	$ echo guided > /sys/devices/system/cpu/amd_pstate/status
+	$ cat /sys/devices/system/cpu/amd_pstate/status
+	guided
+      </screen>
+    </note>
+
+    <para>It is not always that power management is a relevant factor
+    for a workload. A single thread workload that is CPU-bound is likely
+    to run at the highest frequency on a single core. But a workload
+    that does not communicate heavily with other processes and is mostly
+    CPU-bound is unlikely to experience any side effects due to power
+    management. The exceptions are when load balancing moves tasks away
+    from active CPUs if there is a compute imbalance between NUMA nodes
+    or the machine is heavily overloaded.</para>
+
+    <para>The workloads that are most likely to be affected by power
+    management are those that synchronously communicate between multiple
+    threads, idle frequently and/or have low CPU utilization overall.
+    Power management overhead will be further compounded if the threads
+    are sensitive to wakeup latency.</para>
+
+    <para>Power management is critical not only to reduce power-related
+    costs, but because power saved from idling inactive cores can be
+    used to boost the performance of active cores. On the other side,
+    low utilization tasks may take longer to complete if the task is not
+    active long enough for the CPU to run at a high frequency. In some
+    cases, problems can be avoided by configuring a workload to use the
+    minimum number of CPUs necessary for its active tasks. Deciding that
+    requires monitoring the power state of CPUs.</para>
+
+    <para>The P-State and C-State of each CPU can be examined using the
+    <command>turbostat</command> utility. The computer output below
+    shows an example, slightly edited to fit the page, where a workload
+    is busy on CPU 0 and other workloads are idle. A useful exercise is
+    to start a workload and monitor the output of
+    <command>turbostat</command> paying close attention to CPUs that
+    have moderate utilization and running at a lower frequency. If the
+    workload is latency-sensitive, it is grounds for either minimizing
+    the number of CPUs available to the workload or configuring power
+    management.</para>
+
+    <screen>
+
+Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C1%
+-       -    -       -    7      0.21   3122    2846   1.68   377.36   0.00    0.00
+0       0    0  0   512   6      0.15   4099    2546   0.59   371.91   0.00    0.00
+0       0    0  0    0   461    11.26   4094    2546   0.43   570.65   0.00    0.00
+0       0    0  1   513   3      0.12   2432    2546   1.17   374.31   0.00    0.00
+0       0    0  1    1    2      0.10   2464    2546   1.43   383.41   0.00    0.00
+0       0    0  2   514   3      0.12   2432    2546   1.17   374.18   0.00    0.00
+0       0    0  2   2     2      0.10   2460    2546   1.48   382.58   0.00    0.00
+</screen>
+
+    <para>If tuning CPU frequency management is appropriate, the following actions can be
+      taken to set the management policy to performance using the <command>cpupower</command>
+      utility:</para>
+
+    <screen>epyc:~# cpupower frequency-set -g performance
+    Setting cpu: 0
+    Setting cpu: 1
+    Setting cpu: 2
+    ...</screen>
+
+    <para>Persisting it across reboots can be done via a local
+    <command>init</command> script, via <command>udev</command> or via
+    one-shot <command>systemd</command> service file if necessary. Note
+    that <command>turbostat</command> will still show that idling CPUs
+    use a low frequency. The impact of the policy is that a higher
+    frequency will be used as soon as possible when the CPU is
+    active. In some cases, a latency bottleneck will occur because of a
+    CPU exiting idle. If this is identified on the AMD EPYC 9006 Series
+    Processor, restrict the C-state by specifying
+    <command>processor.max_cstate=2</command>. This will prevent CPUs
+    from entering lower C-states. The availability of C-states can be
+    determined with <command>cpupower idle-info</command>. It is
+    expected on the AMD EPYC 9006 Series Processor that the exit latency
+    from C1 is very low. But by allowing C2, it reduces interference
+    from the idle loop injecting micro-operations into the pipeline and
+    should be the best state overall. It is also possible to set the max
+    idle state on individual cores using <command>cpupower
+    idle-set</command>. If SMT is enabled, the idle state should be set
+    on both siblings.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-security-_mitigations">
+    <title>Security mitigation</title>
+
+    <para>On occasion, a security fix is applied to a distribution that
+    has a performance impact. The most notable example is <emphasis
+    role="strong">Meltdown</emphasis> and multiple variants of <emphasis
+    role="strong">Spectre</emphasis> but includes others such as
+    Foreshadow (L1TF). The AMD EPYC 9006 Series Processor is immune to
+    the Meltdown variant and page table isolation is never
+    active. However, it is vulnerable to a subset of Spectre variants
+    although <emphasis role="strong">retbleed</emphasis> is a notable
+    exception. The following table lists known security vulnerabilities
+    that affect the AMD EPYC Processors and their impact on the 6th
+    generation. In addition, it specifies which mitigations are enabled
+    by default for SUSE Linux Enterprise Server 16.1.</para>
+
+    <table>
+      <title>Security mitigations for AMD EPYC 9006 Series Processors</title>
+      <tgroup cols="3">
+        <colspec colname="col_1" colwidth="33*"/>
+        <colspec colname="col_2" colwidth="33*"/>
+        <colspec colname="col_3" colwidth="33*"/>
+        <thead>
+          <row>
+            <entry>Vulnerability</entry>
+            <entry>Affected </entry>
+            <entry>Mitigations</entry>
+          </row>
+        </thead>
+        <tbody>
+          <row>
+            <entry>
+              <para>ITLB Multihit</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>L1TF</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MDS</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Meltdown</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>MMIO Stale Data</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Retbleed</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Speculative Store Bypass</para>
+            </entry>
+            <entry>
+              <para>Yes</para>
+            </entry>
+            <entry>
+              <para>prctl and seccomp policy</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Spectre v1</para>
+            </entry>
+            <entry>
+              <para>Yes</para>
+            </entry>
+            <entry>
+              <para>usercopy/swapgs barriers and __user pointer sanitization</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Spectre v2</para>
+            </entry>
+            <entry>
+              <para>Yes</para>
+            </entry>
+            <entry>
+              <para>Automatic IBRS, conditional IBPB and STIBP</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>SRBDS</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>TSX Async Abort</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Register File Data Sampling (RFDS)</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Gather Data Sampling (GDS)</para>
+            </entry>
+            <entry>
+              <para>No</para>
+            </entry>
+            <entry>
+              <para>N/A</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>Speculative Return Stack Overflow (SRSO)</para>
+            </entry>
+            <entry>
+              <para>Partial</para>
+            </entry>
+            <entry>
+              <para>IBPB on VMEXIT only</para>
+            </entry>
+          </row>
+          <row>
+            <entry>
+              <para>VMSCAPE</para>
+            </entry>
+            <entry>
+              <para>Yes</para>
+            </entry>
+            <entry>
+              <para>IBPB on VMEXIT</para>
+            </entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+
+    <para>If it can be guaranteed that the server is in a trusted environment running
+      only known code that is not malicious, the <parameter>mitigations=off</parameter>
+      parameter can be specified on the kernel command line. This option disables all
+      security mitigations and may improve performance in some cases. However, at the
+      time of writing and in most cases, the gain on an AMD EPYC 9006 Series Processor is
+      marginal when compared to other CPUs. Evaluate carefully whether the gain is worth
+      the risk and if unsure, leave the mitigations enabled.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-hw-based-profiling">
+    <title>Hardware-based profiling</title>
+
+    <para>The AMD EPYC 9006 Series Processor has extensive <emphasis
+    role="strong">Performance Monitoring Unit</emphasis> (PMU)
+    capabilities. Advanced monitoring of a workload can be conducted via
+    the <command>perf</command> utility. The command supports a range of
+    hardware events including cycles, L1 cache access/misses, TLB
+    access/misses, retired branch instructions and mispredicted
+    branches. To identify what subsystem may be worth tuning in the OS,
+    the most useful invocation is <command>perf record -a -e cycles
+    sleep 30</command>. This captures 30 seconds of data for the entire
+    system. You can also call <command>perf record -e cycles
+    command</command> to gather a profile of a given workload. Specific
+    information on the OS can be gathered through tracepoints or
+    creating probe points with <command>perf</command> or
+    <command>trace-cmd</command>. But the details on how to conduct such
+    analyses are beyond the scope of this paper.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-compiler">
+    <title>Compiler selection</title>
+
+    <para>SUSE Linux Enterprise ships with multiple versions of
+    GCC. SUSE Linux Enterprise 16.1 ships with <package>GCC 15</package>
+    which at the time of writing is <package>GCC 15.3.0</package> with
+    the package version <package>15-160100.2.1</package>. The intention
+    is to avoid unintended consequences when porting code that may
+    affect the building and operation of applications. The <package>GCC
+    15</package> development originally started in 2024, with a branch
+    created in 2025 and <package>GCC 15.3</package> released in
+    2026. This means that the system compiler has no awareness of the
+    AMD EPYC 9006 Series processors.</para>
+
+    <para>This compiler is capable of generating optimized code targeted
+    at the 5th Generation AMD EPYC Processor using the
+    <filename>znver5</filename> target.  It also provides additional
+    support for <package>OpenMP 5.2</package> and limited support of
+    <package>OpenMP 6.0</package> features. Through the Developer Tools
+    Module SUSE Linux Enterprise users can obtain newer versions of the
+    compiler with dedicated support to newer processors, such as the AMD
+    EPYC 9006 Series. It is expected that <package>GCC 17</package> will
+    be included in future releases for generating optimized code for the
+    6th Generation AMD EPYC Processor. Unfortunately, at the time of
+    writing, there is not a version of GCC available optimized for the
+    AMD EPYC 9006 Series Processor specifically.</para>
+
+    <para>The OS packages are built against a generic target. However,
+    where applications and benchmarks can be rebuilt from source, the
+    minimum option should be <package>-march=znver5</package> for
+    <package>GCC 15</package> and later versions of GCC.</para>
+
+    <para>Further information on how to install the <package>Developer
+    Tools Module</package> and how to build optimized versions of
+    applications can be found in the guide <link
+    xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-15/index.html">Advanced
+    optimization and new capabilities of GCC 16</link>.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-candidate-workloads">
+    <title>Candidate workloads</title>
+
+    <para>The workloads that will benefit most from the 6th Generation AMD EPYC Processor
+      architecture are those that can be parallelized and are either memory or IO-bound. This
+      is particularly true for workloads that are <quote>NUMA friendly</quote>. They can
+      be parallelized, and each thread can operate independently for most of the
+      workload’s lifetime. For memory-bound workloads, the primary benefit will be taking
+      advantage of the high bandwidth available on each channel. For IO-bound workloads,
+      the primary benefit will be realized when there are multiple storage devices, each
+      of which is connected to the node local to a task issuing IO.</para>
+
+    <sect2 xml:id="sec-test-setup">
+      <title>Test setup</title>
+
+      <para>The following sections will demonstrate how an OpenMP and MPI workload can
+        be configured and tuned on an AMD EPYC 9006 Series Processor reference platform. The
+        system has two processors, each with 256 cores and SMT enabled for a total of 512
+        cores (1024 logical CPUs). The peak bandwidth available to the machine depends on
+        the type of DIMMs installed and how the DIMM slots are populated. Note that the
+        peak theoretical transfer speed is rarely reached in practice, given that it can
+        be affected by the mix of reads/writes and the location and temporal proximity of
+        memory locations accessed.</para>
+
+      <table>
+        <title>Test setup</title>
+        <tgroup cols="2">
+          <colspec colname="col_1" colwidth="50*"/>
+          <colspec colname="col_2" colwidth="50*"/>
+          <tbody>
+            <row>
+              <entry>
+                <para>CPU </para>
+              </entry>
+              <entry>
+                <para>2x AMD EPYC 9996</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Platform</para>
+              </entry>
+              <entry>
+                <para>AMD Engineering Sample Platform</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Drive</para>
+              </entry>
+              <entry>
+                <para>ADATA Technology Co., Ltd. LEGEND 900 PRO NVMe SSD 512GB</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>OS</para>
+              </entry>
+              <entry>
+                <para>SUSE Linux Enterprise Server 16.1</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Memory Type</para>
+              </entry>
+              <entry>
+                <para>32x 64GB DDR5</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Memory Interleaving</para>
+              </entry>
+              <entry>
+                <para>Channel</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Memory Speed</para>
+              </entry>
+              <entry>
+                <para>8000 MT/sec</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Kernel command line</para>
+              </entry>
+              <entry>
+                <para>
+                  <command>mitigations=off</command>
+                </para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+    </sect2>
+
+    <sect2 xml:id="sec-workload-stream">
+      <title>Test workload: STREAM</title>
+
+      <para><emphasis role="italic">STREAM</emphasis> is a memory bandwidth benchmark
+        created by Dr. John D. McCalpin from the University of Virginia (for more
+        information, see <link xlink:href="https://www.cs.virginia.edu/stream/"
+        >https://www.cs.virginia.edu/stream/</link>). It can be used to measure bandwidth
+        of each cache level and bandwidth to main memory while calculating four basic
+        vector operations. Each operation can exhibit different throughputs to main memory
+        depending on the locations and type of access.</para>
+
+      <para>The benchmark was configured to run both single-threaded and parallelized with
+        OpenMP to take advantage of multiple memory controllers. The array of elements for
+        the benchmark was set at 1,073,741,824 elements at compile time so that each array
+        was 8192MB in size for a total memory footprint of approximately 24576.0 MB. The size
+        was selected in line with the recommendation from STREAM that the array sizes be
+        at least 4 times the total size of L3 cache available in the system. Pay special
+        attention to the exact size of the L3 cache if V-Cache is present. An array-size
+        offset was used so that the separate arrays for each parallelized thread would
+        not share a Transparent Huge Page. The reason is that NUMA balancing may
+        choose to migrate shared pages leading to some distortion of the results. </para>
+
+      <table>
+        <title>Test workload: STREAM</title>
+        <tgroup cols="2">
+          <colspec colname="col_1" colwidth="50*"/>
+          <colspec colname="col_2" colwidth="50*"/>
+          <tbody>
+            <row>
+              <entry>
+                <para>Compiler</para>
+              </entry>
+              <entry>
+                <para>gcc-16 (SUSE Linux) 16.2.0</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Compiler flags</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-Ofast -march=znver5 -mcmodel=medium -DOFFSET=512</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>OpenMP compiler flag</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-fopenmp</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>OpenMP environment variables</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>OMP_PROC_BIND=SPREAD</parameter>
+                </para>
+                <para>
+                  <parameter>OMP_NUM_THREADS=16</parameter>
+                </para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para>The <parameter>march=znver5</parameter> is a reflection of
+      the latest compiler available in SUSE Linux Enterprise 16.1 at the
+      time of writing.  It should be checked if a later
+      <package>GCC</package> version is available in the
+      <package>Developer Tools Module</package> that supported
+      <parameter>march=znver6</parameter>. The number of OpenMP threads
+      was selected to have at least one thread running for every memory
+      channel by having one thread per L3 cache available. The
+      <parameter>OMP_PROC_BIND</parameter> parameter spreads the threads
+      such that one thread is bound to each available dedicated L3 cache
+      to maximize available bandwidth. This can be verified using
+      <command>perf</command>, as illustrated below with slight editing
+      for formatting and clarity.</para>
+
+      <screen>epyc:~ # perf record -e sched:sched_migrate_task ./stream
+epyc:~ # perf script
+...
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494780 prio=120 orig_cpu=0 dest_cpu=8
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494781 prio=120 orig_cpu=0 dest_cpu=16
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494782 prio=120 orig_cpu=0 dest_cpu=24
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494783 prio=120 orig_cpu=0 dest_cpu=32
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494784 prio=120 orig_cpu=0 dest_cpu=40
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494785 prio=120 orig_cpu=0 dest_cpu=48
+          stream-nnn x: sched:sched_migrate_task: comm=stream pid=494786 prio=120 orig_cpu=0 dest_cpu=56
+...
+</screen>
+
+      <para>Several options were considered for the test system that were unnecessary
+        for STREAM running on the AMD EPYC 9006 Series Processor but may be useful in other
+        situations. STREAM performance can be limited if a load/store instruction stalls to
+        fetch data. CPUs may automatically prefetch data based on historical behavior but it
+        is not guaranteed. In limited cases, depending on the CPU and workload, this may be
+        addressed by specifying <parameter>-fprefetch-loop-arrays</parameter> and depending
+        on whether the workload is store-intensive, <parameter>-mprefetchwt1</parameter>.
+        However, care must be taken as an explicitly scheduled prefetch may
+        disable a CPU’s predictive algorithms and degrade performance. Similarly, for
+        some workloads branch mispredictions can be a major problem, and in some cases
+        branch mispredictions can be offset against I-Cache pressure by specifying
+        <parameter>-funroll-loops</parameter>. In the case of STREAM on the test
+        system, the CPU accurately predicted the branches rendering the unrolling of
+        loops unnecessary. For math-intensive workloads it can be beneficial to link the
+        application with <parameter>-lmvec</parameter> depending on the application. In the
+        case of STREAM, the workload did not use significant math-based operations and so
+        this option was not used. Some styles of code blocks and loops can also be optimized
+        to use vectored operations by specifying <parameter>-ftree-vectorize</parameter> and
+        explicitly adding support for CPU features such as <parameter>-mavx2</parameter>. In
+        all cases, STREAM does not benefit as its operations are very basic. But it should
+        be considered on an application-by-application basis and when building support
+        libraries such as numerical libraries. In all cases, experimentation is recommended
+        but caution advised. This holds particularly true when considering options like prefetch that may
+        have been advisable on much older CPUs or completely different workloads. Such
+        options are not universally beneficial or always suitable for modern CPUs such as
+        the AMD EPYC 9006 Series Processors.</para>
+
+      <para>In the case of STREAM running on the AMD EPYC 9006 Series Processor,
+      it was sufficient to enable <parameter>-Ofast</parameter>. This includes the
+      <parameter>-O3</parameter> optimizations to enable vectorization. In addition,
+      it gives some leeway for optimizations that increase the code size with additional
+      options for fast math that may not be standards-compliant.</para>
+
+      <para>For OpenMP, the <parameter>SPREAD</parameter> option was
+      used to explicitly force the spread of workers load across L3
+      caches. OpenMP has a variety of different placement options if
+      manually tuning placement. But careful attention should be paid to
+      <parameter>OMP_PLACES</parameter>, given the importance of the L3
+      Cache topology in AMD EPYC 9006 Series Processors, if the
+      operating system does not automatically place tasks
+      appropriately. At the time of writing, it is not possible to
+      specify <parameter>l3cache</parameter> as a place similar to what
+      MPI has. In this case, the topology will need to be examined
+      either with library support such as <package>hwloc</package>,
+      directly via the <parameter>sysfs</parameter> or manually. While
+      it is possible to guess via the CPUID, it is not recommended as
+      CPUs may be offlined or the enumeration may vary between platforms
+      because of BIOS implementations.</para>
+
+
+
+      <para><xref linkend="fig-stream-results"/> shows the reported
+      bandwidth for the single, parallelized and parallelized with
+      explicit placement cases. The single-threaded bandwidth for the
+      basic Copy vector operation on a single core was 74.7 GB/sec. This
+      is higher than the theoretical maximum of a single DIMM, but the
+      IO die interleave accesses, and caching effects and prefetch still
+      apply. The total throughput for each parallel operation with
+      <parameter>SPREAD</parameter> enabled ranged from 700 GB/sec to
+      800 GB/sec depending on the type of operation and how efficiently
+      memory bandwidth was used.  Notably, the gains observed with the
+      explicit <parameter>SPREAD</parameter> in comparison to the
+      default OMP binding are much smaller than observed in previous
+      generations.  This does not indicate a reduction in the sparsely
+      distributed measurement but instead points to an improvement in
+      the baseline without the explicit <parameter>SPREAD</parameter>
+      and can be attributed, in part, to improvements in the initial
+      task placement by the scheduler in SUSE Linux Enterprise
+      16.1.</para>
+
+      <note>
+        <title>STREAM scores</title>
+
+        <para>Higher STREAM scores can be reported by reducing the array sizes so that cache is
+          partially used with the maximum score requiring that each thread's memory footprint fits
+          inside the L1 cache. Additionally, it is possible to achieve results closer to the
+          theoretical maximum by manual optimization of the STREAM benchmark using vectored
+          instructions and explicit scheduling of loads and stores. The purpose of this
+          configuration was to illustrate the impact of properly binding a workload that can be
+          fully parallelized with data-independent threads.</para>
+
+      </note>
+
+      <figure xml:id="fig-stream-results">
+        <title>STREAM Bandwidth, Single Threaded and Parallelized</title>
+        <mediaobject>
+          <imageobject role="fo">
+            <imagedata fileref="amd-epyc-6-graph-stream.png" width="100%" format="PNG"/>
+          </imageobject>
+          <imageobject role="html">
+            <imagedata fileref="amd-epyc-6-graph-stream.png" width="100%" format="PNG"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+    </sect2>
+
+    <sect2 xml:id="sec-workload-nasa">
+      <title>Test workload: NASA Parallel Benchmark</title>
+
+      <para><emphasis role="italic">NASA Parallel Benchmark (NPB)</emphasis> is a small set of
+        compute-intensive kernels designed to evaluate the performance of supercomputers. They are
+        small compute kernels derived from <emphasis role="italic">Computational Fluid Dynamics
+          (CFD)</emphasis> applications. The problem size can be adjusted for different memory
+        sizes. Reference implementations exist for both MPI and OpenMP. This setup will focus on the
+        MPI reference implementation.</para>
+
+      <para>While each application behaves differently, one common characteristic is that the
+        workload is very context-switch intensive, barriers frequently yield the CPU to other tasks
+        and the lifetime of individual processes can be very short-lived. The following paragraphs
+        detail the tuning selected for this workload.</para>
+
+      <para>The most basic step is setting the CPU governor to <quote>performance</quote> although
+        it is not mandatory. This can address issues with short-lived or mobile tasks failing to
+        run long enough for a higher P-State to be selected even though the workload is very
+        throughput-sensitive. The migration cost parameter is set to reduce the frequency in which
+        the load balancer will move an individual task. The minimum granularity is adjusted to reduce
+        overscheduling effects. </para>
+
+      <para>Depending on the computational kernel used, the workload may require a power-of-two
+        number or a square number of processes to be used. However, note that using all available
+        CPUs can mean that the application can contend with itself for CPU time. Furthermore, as IO
+        may be issued to shared memory backed by disk, there are system threads that also need CPU
+        time. Finally, if there is CPU contention, MPI tasks can be stalled waiting on an available
+        CPU and OpenMPI may yield tasks prematurely if it detects there are more MPI tasks than CPUs
+        available. These factors should be carefully considered when tuning for parallelized
+        workloads in general and MPI workloads in particular.</para>
+
+      <para>In the specific case of testing NPB on the System Under Test, there was usually a limited
+        advantage to limiting the number of CPUs used. For the <emphasis role="italics"
+          >Embarrassingly Parallel (EP)</emphasis> load in particular, it benefits from using all
+        available CPUs. Hence, the default configuration used all available CPUs (512) which is both
+        a power-of-two and square number of CPUs because it was a sensible starting point. However,
+        this is not universally true. Using <package>perf</package>, it was found that some
+        workloads are memory-bound and do not benefit from a high degree of parallelization. In
+        addition, for the final configuration, some workloads were parallelized to have one task per
+        L3 cache in the system to maximize cache usage. The exception was the <emphasis
+          role="italic">Scalar Pentadiagonal (SP)</emphasis> workload which was both memory-bound
+        and benefited from using all available CPUs. As the number of cores can vary between chips
+        and the number of populated memory channels, the tuning parameters used for this test may
+        not be universally true for all AMD EPYC platforms. This highlights that there is no
+        universal good choice for optimizing a workload for a platform. Thus, experimentation and
+        validation of tuning parameters is vital.</para>
+
+      <para>The basic compilation flags simply turned on all safe optimizations. The
+        tuned flags used <parameter>-Ofast</parameter> which can be unsafe for some
+        mathematical workloads but generated the correct output for NPB. The other
+        flags used the optimal instructions available on the distribution compiler and
+        vectorized some operations.</para>
+
+      <para>As NPB uses shared files, an XFS partition was used for the temporary files. It is,
+        however, only used for mapping shared files and is not a critical path for the benchmark and
+        no IO tuning is necessary. In some cases, with MPI applications, it will be possible to use a
+          <filename>tmpfs</filename> partition for OpenMPI. This avoids unnecessary IO assuming the
+        increased physical memory usage does not cause the application to be paged out.</para>
+
+      <table>
+        <title>Test workload: NASA Parallel Benchmark</title>
+        <tgroup cols="2">
+          <colspec colname="col_1" colwidth="32*"/>
+          <colspec colname="col_2" colwidth="68*"/>
+          <tbody>
+            <row>
+              <entry>
+                <para>Compiler</para>
+              </entry>
+              <entry>
+                <para>gcc-16 (SUSE Linux) 16.2.0</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>OpenMPI </para>
+              </entry>
+              <entry>
+                <para>openmpi5-5.0.10-160100.2.1</para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Default compiler flags</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-m64 -O3 -mcmodel=large</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Default number processes</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>512</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Selective number processes</para>
+              </entry>
+              <entry>
+                <para>
+                  <!--<parameter>bt=256 cg=256 ep=512 lu=256 mg=256 sp=256</parameter>-->
+                  <parameter>bt=512 cg=512 ep=1024 is=512 lu=512 mg=512 sp=512</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Fortran compiler flags</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-fallow-argument-mismatch -fallow-invalid-boz</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>Tuned compiler flags</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-Ofast -march=znver4 -mtune=znver4 -ftree-vectorize</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>CPU governor performance</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>cpupower frequency-set -g performance</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>mpirun parameters</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>-mca btl ^openib,udapl -np 512 --bind-to l3cache</parameter>
+                </para>
+              </entry>
+            </row>
+            <row>
+              <entry>
+                <para>mpirun environment</para>
+              </entry>
+              <entry>
+                <para>
+                  <parameter>TMPDIR=/xfs-data-partition</parameter>
+                </para>
+              </entry>
+            </row>
+          </tbody>
+        </tgroup>
+      </table>
+
+      <para><xref linkend="fig-epyc-nas-mpi-results"/> shows the time, as reported by
+        the benchmark, for each of the kernels to complete.</para>
+
+      <figure xml:id="fig-epyc-nas-mpi-results">
+        <title>NAS MPI Results</title>
+        <mediaobject>
+          <imageobject role="fo">
+            <imagedata fileref="amd-epyc-5-nas.png" width="100%" format="PNG"/>
+          </imageobject>
+          <imageobject role="html">
+            <imagedata fileref="amd-epyc-5-nas.png" width="100%" format="PNG"/>
+          </imageobject>
+        </mediaobject>
+      </figure>
+
+
+      <para>The <emphasis role="italics">gcc-7-default</emphasis> test used the system
+        compiler, all available CPUs, basic compilation options and the
+        <parameter>performance</parameter> governor. The second test <emphasis
+        role="italics">gcc-13-default</emphasis> used an alternative compiler. <emphasis
+        role="italics">gcc-13-tuned</emphasis> used additional compilation options, and
+        bound tasks to L3 caches gaining between 1.5% and 40.6% performance on average
+        relative to <emphasis role="italics">gcc-7-default</emphasis>. The final test
+        <emphasis role="italics">selective</emphasis> used processes that either used
+        all CPUs, avoided heavy overloaded or limited processes to one per L3 cache,
+        showing additional between 2.35% and 37.66% depending on the computational
+        kernel.</para>
+
+      <para>In some cases, it will be necessary to compile an application that can run
+        on different CPUs. In such cases, <parameter>-march=znver4</parameter>
+        may not be suitable if it generates binaries that are incompatible with other
+        vendors. In such cases, it is possible to specify the ISA-specific options that are
+        cross-compatible with many x86-based CPUs such as <parameter>-mavx2</parameter>,
+        <parameter>-mfma</parameter>, <parameter>-msse2</parameter> or
+        <parameter>msse4a</parameter> while favoring optimal code generation for AMD
+        EPYC 9006 Series Processors with <parameter>-mtune=znver4</parameter>. This can be
+        used to strike a balance between excellent performance on a single CPU and great
+        performance on multiple CPUs.</para>
+    </sect2>
+  </sect1>
+
+  <sect1 xml:id="sec-tuning-zen6c-variant">
+    <title>Tuning AMD EPYC 9006 Series Processors (Zen 6c cores)</title>
+
+    <para>As the Zen 6 and Zen 6c cores are ISA-compatible, no code tuning or compiler setting
+    changes should be necessary. For Cloud environments, partitioning or any binding of Virtual CPUs
+    to Physical CPUs may need to be adjusted to account for the increased number of cores. The
+    additional cores may also allow additional containers or virtual machines to be hosted on the
+    same physical machine without CPU contention. Similarly, the degree of parallelization for HPC
+    workloads may need to be adjusted. In cases where the workload is tuned based on the number of
+    cores, adjustments may be necessary for the changed number of cores per CCD. An exception are
+    cases where the workload already hits scaling limits.  As the size of the cache per core is
+    reduced with more cores, partitioning based on cache sizes may also need to be adjusted. In
+    cases where workloads are tuned based on the output of tools like <command>hwloc</command>,
+    they may adjust automatically but any manual partitioning should be re-examined.</para>
+
+    <para>When configuring workloads for AMD EPYC 9006 Series Processors based on either Zen 6 or
+    Zen 6c cores, the most important task is to set expectations. While super-linear scaling is
+    possible, it should not be expected. It may be possible to achieve super-linear scaling in Cloud
+    Environments for the number of instances hosted without performance loss if individual
+    containers or virtual machines are not utilizing 100% of CPU. However, it should be planned
+    carefully and tested. This would be particularly true in cases where multiple instances are
+    hosted that have different times of day or year for active phases. The normal expectation is a
+    best case of 2.67x gain for CPU-intensive workloads because of the increased number of
+    cores. But sub-linear scaling is common because of resource contention. Contention between SMT
+    siblings, memory bandwidth, memory availability, memory interconnects, thread communication
+    overhead or peripheral devices may prevent perfect linear scaling even for perfectly
+    parallelized applications. Similarly, not all applications can scale perfectly. It is possible
+    for performance to plateau and even regress as the degree of parallelization increases.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-pmu-changes">
+    <title>Performance Monitoring Unit changes</title>
+    <para>Support for the following Zen related perf changes are present in SUSE Linux Enterprise 16.1:</para>
+    <orderedlist>
+      <listitem>
+        <para>AMD Performance Monitoring V2 (PerfMonV2) (v5.19) Zen4+
+          <itemizedlist mark='bullet'>
+            <listitem>
+              <para>global registers allowing enabling/disabling of multiple counters concurrently (via a single MSR operation)</para>
+            </listitem>
+            <listitem>
+              <para>dynamic detection of available PMUs</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </listitem>
+      <listitem>
+        <para>AMD Zen4 IBS extensions (v5.19 kernel, v6.0 perf userspace) Zen4+
+          <itemizedlist mark='bullet'>
+            <listitem>
+              <para>DataSrc extension allowing the source of data to be decoded.</para><para>Perf script and perf record (raw trace) will now report DataSrc details for tagged load/store operations. See perf-amd-ibs(1) for more details.</para>
+            </listitem>
+            <listitem>
+              <para>IBS L3 miss filtering.</para><para>Enabled by specifying an l3missonly=1 event parameter to perf. See perf-amd-ibs(1) for more details.</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </listitem>
+      <listitem>
+        <para>Last Branch Record Extension v2 (LbrExtV2) (v6.1) Zen4+
+          <itemizedlist mark='bullet'>
+            <listitem>
+              <para>LBR Freeze on PMI</para>
+            </listitem>
+            <listitem>
+              <para>Hardware branch filtering providing additional specificity</para>
+            </listitem>
+            <listitem>
+              <para>Branch speculation information</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </listitem>
+      <listitem>
+        <para>XXXXXX JSON event file updates for Zen 4 (v6.2 perf userspace) Zen4+
+          <itemizedlist mark='bullet'>
+            <listitem>
+              <para>This adds event information from the "Core Performance Monitor", "L3 Cache Performance Monitor", "Fabric Performance Monitor Counter" and "Performance Measurement" sections of the AMD Processor Programming Reference (PPR) documentation for Zen4.</para>
+            </listitem>
+          </itemizedlist>
+        </para>
+      </listitem>
+    </orderedlist>
+    <para>Please note.  Zen 6 JSON event updates (perf userspace) were added in Linux v6.10 and will be supported in a subsequent SLE release. Support for Zen 4 unified memory controller events (kernel and perf userspace) is expected to be available in a similar timeframe.</para>
+  </sect1>
+
+  <sect1 xml:id="sec-conclusion">
+    <title>Conclusion</title>
+
+    <para>The introduction of the AMD EPYC 9006 Series Processors continues to push
+      the boundaries of what is possible for memory and
+      IO-bound workloads with significantly higher bandwidth and an increased number of channels. A
+      properly configured and tuned workload can exceed the performance of many contemporary
+      off-the-shelf solutions even when fully customized. The symmetric and balanced nature
+      of the machine makes the task of tuning a workload considerably easier, given that
+      each partition can have symmetric performance. And this is a property that can turn
+      out particularly handy in virtualization, as each virtual machine can be assigned
+      to each one of the partitions.</para>
+
+    <para>With SUSE Linux Enterprise 16.1, all the tools to monitor and tune a workload
+      are readily available. You can extract the maximum performance and
+      reliability running your applications on the 6th Generation AMD EPYC Processor
+      platform.</para>
+
+  </sect1>
+
+  <sect1 xml:id="sec-resources">
+    <title>Resources</title>
+
+    <para>For more information, refer to:</para>
+
+    <itemizedlist>
+      <listitem>
+        <para>AMD EPYC 9006 Series Architecture Overview XXXXXX (<link
+            xlink:href="https://www.amd.com/content/dam/amd/en/documents/epyc-technical-docs/user-guides/58462_amd-epyc-9006-tg-architecture-overview.pdf"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>AMD Socket SP7 Power and Performance Optimization Guide for Family 1Ah Models 50h–57h XXXXXX (<link
+            xlink:href="https://devhub.amd.com//wp-content/uploads/Docs/58412_0.78.pdf"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>Optimizing Linux for Dual-Core AMD Opteron Processors (<link
+            xlink:href="http://www.novell.com/traininglocator/partners/amd/4622016.pdf"
+            />)</para>
+      </listitem>
+
+      <listitem>
+        <para>Advanced Optimization and New Capabilities of GCC 15 (<link
+            xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-15/index.html"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>Advanced Optimization and New Capabilities of GCC 14 (<link
+            xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-14/index.html"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>Advanced Optimization and New Capabilities of GCC 12 (<link
+            xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-12/index.html"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>Advanced Optimization and New Capabilities of GCC 11 (<link
+            xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-11/index.html"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>Systems Performance: Enterprise and the Cloud by Brendan Gregg 2nd Edition(<link
+            xlink:href="http://www.brendangregg.com/systems-performance-2nd-edition-book.html"
+            />)</para>
+      </listitem>
+      <listitem>
+        <para>NASA Parallel Benchmark (<link
+            xlink:href="https://www.nas.nasa.gov/publications/npb.html"
+            />)</para>
+      </listitem>
+    </itemizedlist>
+
+    <para/>
+
+  </sect1>
+
+
+  <!-- <sect1 xml:id="sec-glossary">
+    <title>Glossary</title>
+
+    <para/>
+
+  </sect1>-->
+
+  <sect1 xml:id="sec-appendix-a">
+    <title>Appendix A</title>
+
+    <para>Example of a VM configuration file:</para>
+
+    <screen>
+&lt;domain type="kvm">
+  &lt;name>vm1&lt;/name>
+  &lt;metadata>
+    &lt;libosinfo:libosinfo xmlns:libosinfo="http://libosinfo.org/xmlns/libvirt/domain/1.0">
+      &lt;libosinfo:os id="http://suse.com/sle/15.2"/>
+    &lt;/libosinfo:libosinfo>
+  &lt;/metadata>
+  &lt;memory unit="KiB">209715200&lt;/memory>
+  &lt;currentMemory unit="KiB">209715200&lt;/currentMemory>
+  &lt;memoryBacking>
+    &lt;hugepages>
+      &lt;page size="1048576" unit="KiB"/>
+    &lt;/hugepages>
+    &lt;nosharepages/>
+    &lt;locked/>
+  &lt;/memoryBacking>
+  &lt;vcpu placement="static">256&lt;/vcpu>
+  &lt;cputune>
+    &lt;vcpupin vcpu="0" cpuset="0"/>
+    &lt;vcpupin vcpu="1" cpuset="128"/>
+    &lt;vcpupin vcpu="2" cpuset="1"/>
+    &lt;vcpupin vcpu="3" cpuset="129"/>
+    &lt;vcpupin vcpu="4" cpuset="2"/>
+    &lt;vcpupin vcpu="5" cpuset="130"/>
+    &lt;vcpupin vcpu="6" cpuset="3"/>
+    &lt;vcpupin vcpu="7" cpuset="131"/>
+    &lt;vcpupin vcpu="8" cpuset="4"/>
+    &lt;vcpupin vcpu="9" cpuset="132"/>
+    &lt;vcpupin vcpu="10" cpuset="5"/>
+    &lt;vcpupin vcpu="11" cpuset="133"/>
+    &lt;vcpupin vcpu="12" cpuset="6"/>
+    &lt;vcpupin vcpu="13" cpuset="134"/>
+    &lt;vcpupin vcpu="14" cpuset="7"/>
+    &lt;vcpupin vcpu="15" cpuset="135"/>
+    &lt;vcpupin vcpu="16" cpuset="8"/>
+    &lt;vcpupin vcpu="17" cpuset="136"/>
+    &lt;vcpupin vcpu="18" cpuset="9"/>
+    &lt;vcpupin vcpu="19" cpuset="137"/>
+    &lt;vcpupin vcpu="20" cpuset="10"/>
+    &lt;vcpupin vcpu="21" cpuset="138"/>
+    &lt;vcpupin vcpu="22" cpuset="11"/>
+    &lt;vcpupin vcpu="23" cpuset="139"/>
+    &lt;vcpupin vcpu="24" cpuset="12"/>
+    &lt;vcpupin vcpu="25" cpuset="140"/>
+    &lt;vcpupin vcpu="26" cpuset="13"/>
+    &lt;vcpupin vcpu="27" cpuset="141"/>
+    &lt;vcpupin vcpu="28" cpuset="14"/>
+    &lt;vcpupin vcpu="29" cpuset="142"/>
+    &lt;vcpupin vcpu="30" cpuset="15"/>
+    &lt;vcpupin vcpu="31" cpuset="143"/>
+    &lt;vcpupin vcpu="32" cpuset="16"/>
+    &lt;vcpupin vcpu="33" cpuset="144"/>
+    &lt;vcpupin vcpu="34" cpuset="17"/>
+    &lt;vcpupin vcpu="35" cpuset="145"/>
+    &lt;vcpupin vcpu="36" cpuset="18"/>
+    &lt;vcpupin vcpu="37" cpuset="146"/>
+    &lt;vcpupin vcpu="38" cpuset="19"/>
+    &lt;vcpupin vcpu="39" cpuset="147"/>
+    &lt;vcpupin vcpu="40" cpuset="20"/>
+    &lt;vcpupin vcpu="41" cpuset="148"/>
+    &lt;vcpupin vcpu="42" cpuset="21"/>
+    &lt;vcpupin vcpu="43" cpuset="149"/>
+    &lt;vcpupin vcpu="44" cpuset="22"/>
+    &lt;vcpupin vcpu="45" cpuset="150"/>
+    &lt;vcpupin vcpu="46" cpuset="23"/>
+    &lt;vcpupin vcpu="47" cpuset="151"/>
+    &lt;vcpupin vcpu="48" cpuset="24"/>
+    &lt;vcpupin vcpu="49" cpuset="152"/>
+    &lt;vcpupin vcpu="50" cpuset="25"/>
+    &lt;vcpupin vcpu="51" cpuset="153"/>
+    &lt;vcpupin vcpu="52" cpuset="26"/>
+    &lt;vcpupin vcpu="53" cpuset="154"/>
+    &lt;vcpupin vcpu="54" cpuset="27"/>
+    &lt;vcpupin vcpu="55" cpuset="155"/>
+    &lt;vcpupin vcpu="56" cpuset="28"/>
+    &lt;vcpupin vcpu="57" cpuset="156"/>
+    &lt;vcpupin vcpu="58" cpuset="29"/>
+    &lt;vcpupin vcpu="59" cpuset="157"/>
+    &lt;vcpupin vcpu="60" cpuset="30"/>
+    &lt;vcpupin vcpu="61" cpuset="158"/>
+    &lt;vcpupin vcpu="62" cpuset="31"/>
+    &lt;vcpupin vcpu="63" cpuset="159"/>
+    &lt;vcpupin vcpu="64" cpuset="32"/>
+    &lt;vcpupin vcpu="65" cpuset="160"/>
+    &lt;vcpupin vcpu="66" cpuset="33"/>
+    &lt;vcpupin vcpu="67" cpuset="161"/>
+    &lt;vcpupin vcpu="68" cpuset="34"/>
+    &lt;vcpupin vcpu="69" cpuset="162"/>
+    &lt;vcpupin vcpu="70" cpuset="35"/>
+    &lt;vcpupin vcpu="71" cpuset="163"/>
+    &lt;vcpupin vcpu="72" cpuset="36"/>
+    &lt;vcpupin vcpu="73" cpuset="164"/>
+    &lt;vcpupin vcpu="74" cpuset="37"/>
+    &lt;vcpupin vcpu="75" cpuset="165"/>
+    &lt;vcpupin vcpu="76" cpuset="38"/>
+    &lt;vcpupin vcpu="77" cpuset="166"/>
+    &lt;vcpupin vcpu="78" cpuset="39"/>
+    &lt;vcpupin vcpu="79" cpuset="167"/>
+    &lt;vcpupin vcpu="80" cpuset="40"/>
+    &lt;vcpupin vcpu="81" cpuset="168"/>
+    &lt;vcpupin vcpu="82" cpuset="41"/>
+    &lt;vcpupin vcpu="83" cpuset="169"/>
+    &lt;vcpupin vcpu="84" cpuset="42"/>
+    &lt;vcpupin vcpu="85" cpuset="170"/>
+    &lt;vcpupin vcpu="86" cpuset="43"/>
+    &lt;vcpupin vcpu="87" cpuset="171"/>
+    &lt;vcpupin vcpu="88" cpuset="44"/>
+    &lt;vcpupin vcpu="89" cpuset="172"/>
+    &lt;vcpupin vcpu="90" cpuset="45"/>
+    &lt;vcpupin vcpu="91" cpuset="173"/>
+    &lt;vcpupin vcpu="92" cpuset="46"/>
+    &lt;vcpupin vcpu="93" cpuset="174"/>
+    &lt;vcpupin vcpu="94" cpuset="47"/>
+    &lt;vcpupin vcpu="95" cpuset="175"/>
+    &lt;vcpupin vcpu="96" cpuset="48"/>
+    &lt;vcpupin vcpu="97" cpuset="176"/>
+    &lt;vcpupin vcpu="98" cpuset="49"/>
+    &lt;vcpupin vcpu="99" cpuset="177"/>
+    &lt;vcpupin vcpu="100" cpuset="50"/>
+    &lt;vcpupin vcpu="101" cpuset="178"/>
+    &lt;vcpupin vcpu="102" cpuset="51"/>
+    &lt;vcpupin vcpu="103" cpuset="179"/>
+    &lt;vcpupin vcpu="104" cpuset="52"/>
+    &lt;vcpupin vcpu="105" cpuset="180"/>
+    &lt;vcpupin vcpu="106" cpuset="53"/>
+    &lt;vcpupin vcpu="107" cpuset="181"/>
+    &lt;vcpupin vcpu="108" cpuset="54"/>
+    &lt;vcpupin vcpu="109" cpuset="182"/>
+    &lt;vcpupin vcpu="110" cpuset="55"/>
+    &lt;vcpupin vcpu="111" cpuset="183"/>
+    &lt;vcpupin vcpu="112" cpuset="56"/>
+    &lt;vcpupin vcpu="113" cpuset="184"/>
+    &lt;vcpupin vcpu="114" cpuset="57"/>
+    &lt;vcpupin vcpu="115" cpuset="185"/>
+    &lt;vcpupin vcpu="116" cpuset="58"/>
+    &lt;vcpupin vcpu="117" cpuset="186"/>
+    &lt;vcpupin vcpu="118" cpuset="59"/>
+    &lt;vcpupin vcpu="119" cpuset="187"/>
+    &lt;vcpupin vcpu="120" cpuset="60"/>
+    &lt;vcpupin vcpu="121" cpuset="188"/>
+    &lt;vcpupin vcpu="122" cpuset="61"/>
+    &lt;vcpupin vcpu="123" cpuset="189"/>
+    &lt;vcpupin vcpu="124" cpuset="62"/>
+    &lt;vcpupin vcpu="125" cpuset="190"/>
+    &lt;vcpupin vcpu="126" cpuset="63"/>
+    &lt;vcpupin vcpu="127" cpuset="191"/>
+    &lt;vcpupin vcpu="128" cpuset="64"/>
+    &lt;vcpupin vcpu="129" cpuset="192"/>
+    &lt;vcpupin vcpu="130" cpuset="65"/>
+    &lt;vcpupin vcpu="131" cpuset="193"/>
+    &lt;vcpupin vcpu="132" cpuset="66"/>
+    &lt;vcpupin vcpu="133" cpuset="194"/>
+    &lt;vcpupin vcpu="134" cpuset="67"/>
+    &lt;vcpupin vcpu="135" cpuset="195"/>
+    &lt;vcpupin vcpu="136" cpuset="68"/>
+    &lt;vcpupin vcpu="137" cpuset="196"/>
+    &lt;vcpupin vcpu="138" cpuset="69"/>
+    &lt;vcpupin vcpu="139" cpuset="197"/>
+    &lt;vcpupin vcpu="140" cpuset="70"/>
+    &lt;vcpupin vcpu="141" cpuset="198"/>
+    &lt;vcpupin vcpu="142" cpuset="71"/>
+    &lt;vcpupin vcpu="143" cpuset="199"/>
+    &lt;vcpupin vcpu="144" cpuset="72"/>
+    &lt;vcpupin vcpu="145" cpuset="200"/>
+    &lt;vcpupin vcpu="146" cpuset="73"/>
+    &lt;vcpupin vcpu="147" cpuset="201"/>
+    &lt;vcpupin vcpu="148" cpuset="74"/>
+    &lt;vcpupin vcpu="149" cpuset="202"/>
+    &lt;vcpupin vcpu="150" cpuset="75"/>
+    &lt;vcpupin vcpu="151" cpuset="203"/>
+    &lt;vcpupin vcpu="152" cpuset="76"/>
+    &lt;vcpupin vcpu="153" cpuset="204"/>
+    &lt;vcpupin vcpu="154" cpuset="77"/>
+    &lt;vcpupin vcpu="155" cpuset="205"/>
+    &lt;vcpupin vcpu="156" cpuset="78"/>
+    &lt;vcpupin vcpu="157" cpuset="206"/>
+    &lt;vcpupin vcpu="158" cpuset="79"/>
+    &lt;vcpupin vcpu="159" cpuset="207"/>
+    &lt;vcpupin vcpu="160" cpuset="80"/>
+    &lt;vcpupin vcpu="161" cpuset="208"/>
+    &lt;vcpupin vcpu="162" cpuset="81"/>
+    &lt;vcpupin vcpu="163" cpuset="209"/>
+    &lt;vcpupin vcpu="164" cpuset="82"/>
+    &lt;vcpupin vcpu="165" cpuset="210"/>
+    &lt;vcpupin vcpu="166" cpuset="83"/>
+    &lt;vcpupin vcpu="167" cpuset="211"/>
+    &lt;vcpupin vcpu="168" cpuset="84"/>
+    &lt;vcpupin vcpu="169" cpuset="212"/>
+    &lt;vcpupin vcpu="170" cpuset="85"/>
+    &lt;vcpupin vcpu="171" cpuset="213"/>
+    &lt;vcpupin vcpu="172" cpuset="86"/>
+    &lt;vcpupin vcpu="173" cpuset="214"/>
+    &lt;vcpupin vcpu="174" cpuset="87"/>
+    &lt;vcpupin vcpu="175" cpuset="215"/>
+    &lt;vcpupin vcpu="176" cpuset="88"/>
+    &lt;vcpupin vcpu="177" cpuset="216"/>
+    &lt;vcpupin vcpu="178" cpuset="89"/>
+    &lt;vcpupin vcpu="179" cpuset="217"/>
+    &lt;vcpupin vcpu="180" cpuset="90"/>
+    &lt;vcpupin vcpu="181" cpuset="218"/>
+    &lt;vcpupin vcpu="182" cpuset="91"/>
+    &lt;vcpupin vcpu="183" cpuset="219"/>
+    &lt;vcpupin vcpu="184" cpuset="92"/>
+    &lt;vcpupin vcpu="185" cpuset="220"/>
+    &lt;vcpupin vcpu="186" cpuset="93"/>
+    &lt;vcpupin vcpu="187" cpuset="221"/>
+    &lt;vcpupin vcpu="188" cpuset="94"/>
+    &lt;vcpupin vcpu="189" cpuset="222"/>
+    &lt;vcpupin vcpu="190" cpuset="95"/>
+    &lt;vcpupin vcpu="191" cpuset="223"/>
+    &lt;vcpupin vcpu="192" cpuset="96"/>
+    &lt;vcpupin vcpu="193" cpuset="224"/>
+    &lt;vcpupin vcpu="194" cpuset="97"/>
+    &lt;vcpupin vcpu="195" cpuset="225"/>
+    &lt;vcpupin vcpu="196" cpuset="98"/>
+    &lt;vcpupin vcpu="197" cpuset="226"/>
+    &lt;vcpupin vcpu="198" cpuset="99"/>
+    &lt;vcpupin vcpu="199" cpuset="227"/>
+    &lt;vcpupin vcpu="200" cpuset="100"/>
+    &lt;vcpupin vcpu="201" cpuset="228"/>
+    &lt;vcpupin vcpu="202" cpuset="101"/>
+    &lt;vcpupin vcpu="203" cpuset="229"/>
+    &lt;vcpupin vcpu="204" cpuset="102"/>
+    &lt;vcpupin vcpu="205" cpuset="230"/>
+    &lt;vcpupin vcpu="206" cpuset="103"/>
+    &lt;vcpupin vcpu="207" cpuset="231"/>
+    &lt;vcpupin vcpu="208" cpuset="104"/>
+    &lt;vcpupin vcpu="209" cpuset="232"/>
+    &lt;vcpupin vcpu="210" cpuset="105"/>
+    &lt;vcpupin vcpu="211" cpuset="233"/>
+    &lt;vcpupin vcpu="212" cpuset="106"/>
+    &lt;vcpupin vcpu="213" cpuset="234"/>
+    &lt;vcpupin vcpu="214" cpuset="107"/>
+    &lt;vcpupin vcpu="215" cpuset="235"/>
+    &lt;vcpupin vcpu="216" cpuset="108"/>
+    &lt;vcpupin vcpu="217" cpuset="236"/>
+    &lt;vcpupin vcpu="218" cpuset="109"/>
+    &lt;vcpupin vcpu="219" cpuset="237"/>
+    &lt;vcpupin vcpu="220" cpuset="110"/>
+    &lt;vcpupin vcpu="221" cpuset="238"/>
+    &lt;vcpupin vcpu="222" cpuset="111"/>
+    &lt;vcpupin vcpu="223" cpuset="239"/>
+    &lt;vcpupin vcpu="224" cpuset="112"/>
+    &lt;vcpupin vcpu="225" cpuset="240"/>
+    &lt;vcpupin vcpu="226" cpuset="113"/>
+    &lt;vcpupin vcpu="227" cpuset="241"/>
+    &lt;vcpupin vcpu="228" cpuset="114"/>
+    &lt;vcpupin vcpu="229" cpuset="242"/>
+    &lt;vcpupin vcpu="230" cpuset="115"/>
+    &lt;vcpupin vcpu="231" cpuset="243"/>
+    &lt;vcpupin vcpu="232" cpuset="116"/>
+    &lt;vcpupin vcpu="233" cpuset="244"/>
+    &lt;vcpupin vcpu="234" cpuset="117"/>
+    &lt;vcpupin vcpu="235" cpuset="245"/>
+    &lt;vcpupin vcpu="236" cpuset="118"/>
+    &lt;vcpupin vcpu="237" cpuset="246"/>
+    &lt;vcpupin vcpu="238" cpuset="119"/>
+    &lt;vcpupin vcpu="239" cpuset="247"/>
+    &lt;vcpupin vcpu="240" cpuset="120"/>
+    &lt;vcpupin vcpu="241" cpuset="248"/>
+    &lt;vcpupin vcpu="242" cpuset="121"/>
+    &lt;vcpupin vcpu="243" cpuset="249"/>
+    &lt;vcpupin vcpu="244" cpuset="122"/>
+    &lt;vcpupin vcpu="245" cpuset="250"/>
+    &lt;vcpupin vcpu="246" cpuset="123"/>
+    &lt;vcpupin vcpu="247" cpuset="251"/>
+    &lt;vcpupin vcpu="248" cpuset="124"/>
+    &lt;vcpupin vcpu="249" cpuset="252"/>
+    &lt;vcpupin vcpu="250" cpuset="125"/>
+    &lt;vcpupin vcpu="251" cpuset="253"/>
+    &lt;vcpupin vcpu="252" cpuset="126"/>
+    &lt;vcpupin vcpu="253" cpuset="254"/>
+    &lt;vcpupin vcpu="254" cpuset="127"/>
+    &lt;vcpupin vcpu="255" cpuset="255"/>
+  &lt;/cputune>
+  &lt;numatune>
+    &lt;memory mode="strict" nodeset="0-1"/>
+    &lt;memnode cellid="0" mode="strict" nodeset="0"/>
+    &lt;memnode cellid="1" mode="strict" nodeset="1"/>
+  &lt;/numatune>
+  &lt;os>
+    &lt;type arch="x86_64" machine="pc-q35-4.2">hvm&lt;/type>
+    &lt;loader readonly="yes" type="pflash">/usr/share/qemu/ovmf-x86_64-ms-4m-code.bin&lt;/loader>
+    &lt;nvram>/var/lib/libvirt/qemu/nvram/vm1_VARS.fd&lt;/nvram>
+    &lt;boot dev="hd"/>
+  &lt;/os>
+  &lt;features>
+    &lt;acpi/>
+    &lt;apic/>
+    &lt;pae/>
+    &lt;vmport state="off"/>
+    &lt;ioapic driver="qemu"/>
+  &lt;/features>
+  &lt;cpu mode="custom" match="exact" check="none">
+    &lt;model fallback="allow">EPYC&lt;/model>
+    &lt;topology sockets="2" cores="64" threads="2"/>
+    &lt;numa>
+      &lt;cell id="0" cpus="0-127" memory="104857600" unit="KiB">
+        &lt;distances>
+          &lt;sibling id="0" value="10"/>
+          &lt;sibling id="1" value="32"/>
+        &lt;/distances>
+      &lt;/cell>
+      &lt;cell id="1" cpus="128-255" memory="104857600" unit="KiB">
+        &lt;distances>
+          &lt;sibling id="0" value="32"/>
+          &lt;sibling id="1" value="10"/>
+        &lt;/distances>
+      &lt;/cell>
+    &lt;/numa>
+  &lt;/cpu>
+  &lt;clock offset="utc">
+    &lt;timer name="rtc" tickpolicy="catchup"/>
+    &lt;timer name="pit" tickpolicy="delay"/>
+    &lt;timer name="hpet" present="no"/>
+  &lt;/clock>
+  &lt;on_poweroff>destroy&lt;/on_poweroff>
+  &lt;on_reboot>restart&lt;/on_reboot>
+  &lt;on_crash>destroy&lt;/on_crash>
+  &lt;pm>
+    &lt;suspend-to-mem enabled="no"/>
+    &lt;suspend-to-disk enabled="no"/>
+  &lt;/pm>
+  &lt;devices>
+    &lt;emulator>/usr/bin/qemu-system-x86_64&lt;/emulator>
+    &lt;disk type="file" device="disk">
+      &lt;driver name="qemu" type="qcow2"/>
+      &lt;source file="/var/lib/libvirt/images/vm1.qcow2"/>
+      &lt;target dev="vda" bus="virtio"/>
+      &lt;address type="pci" domain="0x0000" bus="0x05" slot="0x00" function="0x0"/>
+    &lt;/disk>
+    ...
+    &lt;interface type="network">
+      &lt;mac address="52:54:00:16:1e:01"/>
+      &lt;source network="default"/>
+      &lt;model type="virtio"/>
+      &lt;rom enabled="no"/>
+      &lt;address type="pci" domain="0x0000" bus="0x01" slot="0x00" function="0x0"/>
+    &lt;/interface>
+    &lt;serial type="pty">
+      &lt;target type="isa-serial" port="0">
+        &lt;model name="isa-serial"/>
+      &lt;/target>
+    &lt;/serial>
+    &lt;console type="pty">
+      &lt;target type="serial" port="0"/>
+    &lt;/console>
+    ...
+    &lt;graphics type="spice" autoport="yes">
+      &lt;listen type="address"/>
+    &lt;/graphics>
+    &lt;video>
+      &lt;model type="qxl" ram="65536" vram="65536" vgamem="16384" heads="1" primary="yes"/>
+      &lt;address type="pci" domain="0x0000" bus="0x00" slot="0x01" function="0x0"/>
+    &lt;/video>
+    &lt;memballoon model="virtio">
+      &lt;address type="pci" domain="0x0000" bus="0x06" slot="0x00" function="0x0"/>
+    &lt;/memballoon>
+    &lt;rng model="virtio">
+      &lt;backend model="random">/dev/urandom&lt;/backend>
+      &lt;address type="pci" domain="0x0000" bus="0x08" slot="0x00" function="0x0"/>
+    &lt;/rng>
+    &lt;iommu model="intel">
+      &lt;driver intremap="on" eim="on"/>
+    &lt;/iommu>
+    &lt;vsock model="virtio">
+      &lt;cid auto="yes"/>
+      &lt;address type="pci" domain="0x0000" bus="0x07" slot="0x00" function="0x0"/>
+    &lt;/vsock>
+  &lt;/devices>
+&lt;/domain>
+    </screen>
+
+  </sect1>
+
+  <?pdfpagebreak style="sbp" formatter="fop"?>
+
+  <xi:include href="sbp-legal-notice.xml"/>
+
+  <?pdfpagebreak style="sbp" formatter="fop"?>
+  <xi:include href="license-gfdl.xml"/>
+</article>
