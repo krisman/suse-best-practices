@@ -154,10 +154,11 @@
 
     <abstract>
 
-      <para>The document at hand provides an overview of the AMD EPYC™
-      9006 SP7 and SP8 Series Processors based on Zen 6 and Zen 6c
-      cores. It details how some computational-intensive workloads can
-      be tuned on SUSE Linux Enterprise Server 16.1.</para>
+      <para>The document at hand provides an overview of the
+      sixth-generation of AMD EPYC™ server class processors (9006)
+      featuring the latest Zen 6 compute cores.  It details how some
+      computational-intensive workloads can be tuned on SUSE Linux
+      Enterprise Server 16.1.</para>
 
       <para><emphasis role="strong">Disclaimer: </emphasis></para>
       <para>Documents published as part of
@@ -176,154 +177,145 @@
   <sect1 xml:id="sec-overview">
     <title>Overview</title>
 
-    <para>The AMD EPYC 9006 Series Processor is the 6th generation of the AMD EPYC server
-    class processor family. It is based on the Zen 6 microarchitecture announced in 2026
-    for two socket variants, SP7 and SP8.  The SP7 socket supports a higher core count with
-    support up to 256 Zen 6c cores (512 threads) with up to 16 channels of DDR5/MRDIMM. The
-    SP8 provides up to 128 cores (256 threads with up to 8 channels of DDR5/MRDIMM).  At the
-    time of writing, 1-socket and 2-socket models are expected to be available from
-    Original Equipment Manufacturers (OEMs). This document provides an overview of
-    the AMD EPYC 9006 Series Processors based on Zen 6 and Zen 6c cores and how
-    computational-intensive workloads can be tuned on SUSE Linux Enterprise Server
-    16.1. </para>
-
+    <para>The AMD EPYC 9006 Series Processor is the 6th generation of the AMD EPYC server class
+    processor family announced in 2026.  This generation is based on the Zen 6 core family, featuring
+    up to 96 Zen 6 Classic cores (192 threads) and up to 256 Zen 6c Dense cores (512 threads). At the
+    time of writing, 1-socket and 2-socket models are expected to be available from Original
+    Equipment Manufacturers (OEMs). This document provides an overview of the AMD EPYC 9006 Series
+    Processors and how computational-intensive workloads can be tuned on SUSE Linux Enterprise
+    Server 16.1. </para>
   </sect1>
 
   <sect1 xml:id="sec-epyc-architecture">
     <title>AMD EPYC 9006 Series Processor (Zen 6 cores) architecture</title>
 
-    <para><emphasis role="italic">Symmetric multiprocessing (SMP)</emphasis> systems are
-    those that contain two or more physical processing cores. Each core may have two
-    execution threads if <emphasis role="italic">Symmetric multithreading (SMT)</emphasis>
-    is enabled, with some resources being shared between SMT siblings. To minimize access
-    latencies, multiple layers of caches are used with each level being larger but with
-    higher access costs. Cores may share different levels of cache which should be
-    considered when tuning for a workload.</para>
+    <para> Modern <emphasis role="italic">Symmetric multiprocessing (SMP)</emphasis> processors with
+    high-core count employ a modular chip design called Multi-Chip Modules (MCM), in which the chip
+    is actually composed of multiple modular dies of different kind, each with its own functions,
+    that share a single set of interconnects within the socket and another separate connection
+    outside of it.  At each modular level, multiple layers of caches exist to minimize the latency
+    of memory access, with each cache level being larger but having higher access costs that the
+    previous.  Modern processors also commonly employ <emphasis role="italic">Symmetric
+    multithreading (SMT)</emphasis> technology, where each core actually has multiple execution
+    threads (sibling threads) with resources shared between the siblings.  As a result, transfers
+    between some CPUS and memory pairs are executed much faster than others, depending on their
+    physical location, even though they might appear logically to be inside the same package from a
+    user point of view.  A performance-focused developer must take these specific
+    micro-architectural details into account and tune their application accordingly in order to
+    eliminate non-essential cross-resource communication overhead.  Note, however, from an
+    programmer perspective, this is a further development of traditional <emphasis
+    role="italic">Non-Uniform Memory Architecture (NUMA)</emphasis> architectures, and aspects of
+    NUMA-aware tuning also apply to these systems.</para>
 
-    <para>Historically, a single socket contained several cores sharing a hierarchy of
-    caches and memory channels, and multiple sockets were connected via a memory
-    interconnect. Modern configurations may have multiple dies as a <emphasis
-    role="italic">Multi-Chip Module (MCM)</emphasis> with one set of interconnects within
-    the socket and a separate interconnect for each socket. This means that transfers
-    between some CPUs and memory pairs are faster to access than others, depending on the
-    <quote>distance</quote> between the resources.  This should be considered when tuning
-    for <emphasis role="italic">Non-Uniform Memory Architecture (NUMA)</emphasis> as
-    similar-looking memory accesses may not reach memory with the same access speed
-    characteristics, incurring a variable access penalty.</para>
+    <para>A 6th Generation AMD EPYC Processor has a design of up to 10 dies on each socket.  Up to 8
+    of those are computation dies, called Core Complex Dies (CCDs), each composed of one Core
+    CompleX (CCX), with up to 12 Zen6 cores or up to 32 Zen6c Dense cores.  This means the maximum
+    number of cores in a 9006 series processors is 96 of Zen6 classic cores (192 threads) or 256 of
+    Zen6c Dense cores (512 threads). The other 2 dies are dedicated central high-speed I/O Dies
+    (IODs), which provide the data and control path to interconnect each CCDs with memory and I/O
+    devices.</para>
 
-    <para>The 6th Generation AMD EPYC Processor has an MCM design with up to 9
-    dies on each package. From a topology point of view, this is significantly
-    different to the 1st Generation AMD EPYC Processor design. However, it is
-    similar to the 5th Generation AMD EPYC Processor, with regard to the
-    symmetry of cores inside the same die.  One die is a dedicated central IO
-    die through which all off-chip communication passes through. The basic
-    building block of a compute die is a Core CompleX (CCX) of up to 32 cores
-    with its own L1-L3 cache hierarchy. Similar to the 5th Generation AMD EPYC
-    Processor, one Core Complex Die (CCD) consists of one CCX connected via an
-    Infinity Link to the IO die, as opposed to two CCXs used in the 2nd
-    Generation AMD EPYC Processor. This allows direct communication within a CCD
-    instead of using the IO link maintaining reduced communication and memory
-    access latency.  A 96-core Zen 6 socket therefore consists of 8 CCDs each
-    with a single CCX containing up to 12 cores each, (192 threads with SMT
-    enabled), with one additional IO die for 9 dies in total. </para>
+    <para>Aside from the number of cores, the design of a CCD is similar to that of the 5th
+    Generation AMD EPYC series.  Like the 5th generation, the cores inside the CCD are all part of a
+    single CCX, and share a unified L3 across the CCD.  This is very different to the first
+    Generation of AMD EPYC processors where there was more than one CCX per CCD.  From a topology
+    point-of-view, the cores within a CCD appear to be symmetrical to each other.  Each Zen6 compute
+    core includes up to 32KB of L1 I-Cache and 48KB of L1 D-cache with up to 1MB private L2
+    cache. Each core also supports 2 sibling hardware threads (SMT).</para>
 
-    <para>6th Generation AMD EPYC Processors potentially have a larger
-    L3 cache. In a standard configuration, a 6th Generation AMD EPYC
-    Processor has 128MB L3 cache per CCD. Some CPU chips may also
-    include an AMD V-Cache expansion that can triple the size of the L3
-    cache. This potentially provides a major performance boost to
-    applications as more active data can be stored in low-latency
-    cache. The exact performance impact is variable, but any
-    memory-intensive workload should benefit from having a lower average
-    memory access latency because of a larger cache.</para>
+    <para>The 6th Generation AMD EPYC Processors potentially have a larger L3 cache. In a standard
+    configuration, a CCX of Zen 6 compute cores has up to 48MB of L3 cache, while a Zen 6c Dense CCX
+    may have up to 128 MB of shared L3 cache per CCX. The total L3 cache per-core will vary depending
+    on the exact processor model, since some models may have less than the maximum cores per CCD and
+    cores can be disabled at runtime. But assuming the highest core-count configuration, this
+    translates roughly to a 4MB L3 cache per core and up to 1TB of L3 cache per socket. Some CPU
+    chips may also include the AMD V-Cache expansion that can triple the size of the L3 cache. This
+    potentially provides a major performance boost to applications as more active data can be stored
+    in low-latency cache. The exact performance impact is variable, but any memory-intensive
+    workload should benefit from having a lower average memory access latency because of a larger
+    cache.</para>
 
-    <para>Communication between the chip and memory happens via the IO die. Each CCD has
-    one dedicated Infinity Fabric link to the IO die. The practical consequence of this
-    architecture versus the 1st Generation AMD EPYC Processor is that the topology is
-    simpler.  The first generation had separate memory channels per die and links between
-    dies giving two levels of NUMA distance within a single socket and a third distance
-    when communicating between sockets. This meant that a two-socket machine for EPYC had 4
-    NUMA nodes (3 levels of NUMA distance). The 2nd Generation AMD EPYC Processor has only
-    2 NUMA nodes (2 levels of NUMA distance) which makes it easier to tune and
-    optimize. The NUMA distances are the same from 3rd to 6th Generation AMD EPYC
-    Processors.</para>
+    <para>The central I/O dies are two identical interconnection fabrics dedicated to control and
+    route data between CCDs and memory, I/O devices or even other processor sockets.  While each CCD
+    has a dedicated interconnect link to an IO die, they also interconnect directly with each other
+    via the AMD Infinity Fabric link.  This architecture is much simpler than the first generation
+    of AMD EPYC processors which had separate memory channels per die and links between dies giving
+    two levels of NUMA distance within a single socket and a third distance when communicating
+    between sockets. With the consolidation of the IO die after the third generation, the NUMA
+    distance became more similar across all cpus, which makes it easier to tune and optimize. The
+    NUMA distances are the same from 3rd to 6th Generation AMD EPYC Processors.</para>
 
-    <para>The IO die has a total of 16 memory controllers supporting DDR5 <emphasis
-    role="italic">Dual Inline Memory Modules (DIMMs)</emphasis> with the maximum supported
-    speed expected to be DDR5-8000 or JEDEC-standard second-generation MRDIMM 12.8G at the
-    time of writing. This implies a peak channel bandwidth of up to 1.6 TB/sec memory
-    bandwidth across a socket. The exact bandwidth depends on the memory technology
-    selected, the number of memory channels populated, how cache is used and the efficiency
-    of the application. Where possible, all memory channels should have a DIMM installed to
-    maximize memory bandwidth.</para>
+    <para>The IO dies have a total of 16 memory controllers supporting DDR5 <emphasis
+    role="italic">Dual Inline Memory Modules (DIMMs)</emphasis> with the maximum supported speed
+    expected to be DDR5-8000 or JEDEC-standard second-generation MRDIMM 12.8G announced, at the time
+    of writing. This implies a peak channel bandwidth of up to 1 TB/sec memory bandwidth across a
+    socket and up to 8TB of total DDR5 memory. The exact bandwidth depends on the memory technology
+    selected, the number of memory channels populated, how cache is used and the efficiency of the
+    application. Where possible, each memory channels should have a DIMM installed to maximize memory
+    bandwidth.</para>
 
-    <para>While the topologies and basic layout is similar between the 5th and 6th
-    Generation AMD EPYC Processors, there are several micro-architectural differences.  The
-    higher density core count, expanded memory and I/O capabilities makes it capable of
-    scaling more AI agents, virtual machines and workloads per rack.  The <emphasis
-    role="italic">Instructions Per Cycle (IPC)</emphasis> has improved on average for
-    enterprise and cloud workloads and is much higher in AI and high performance computing
-    (HPC), although the exact improvement is workload-dependent.
-      </para>
+    <para>While the topologies and basic layout is similar to previous generations, there are
+    several micro-architectural differences.  The higher density core count and expanded memory and
+    I/O capabilities makes it capable of scaling more parallel workloads such as AI agents and
+    virtual machines per rack.  The <emphasis role="italic">Instructions Per Cycle (IPC)</emphasis>
+    has improved on average for enterprise and cloud workloads and is much higher in AI and high
+    performance computing (HPC), although the exact improvement is workload-dependent.</para>
 
-    <para>Power management on the links is careful to minimize the amount of power
-    required. If the links are idle, the power may be used to boost the frequency of
-    individual cores. Hence, minimizing access is not only important from a memory access
-    latency point of view, but it also has an impact on the speed of individual
-    cores.</para>
+    <para>Power management on the links is careful to minimize the amount of power required. If the
+    links are idle, the power may be used to boost the frequency of individual cores. Hence,
+    minimizing access is not only important from a memory access latency point of view, but it also
+    has an impact on the speed of individual cores.</para>
 
-    <para>There are up to 128 IO lanes supporting PCIe Gen 6.0 per socket. Lanes can be
-    used as Infinity links, PCI Express links, SATA links (maximum 32 links) or CXL 3.1
-    links (maximum 64 links). The exact number of PCIe 6.0 and configuration links vary by
-    chip and motherboard. This allows very large IO configurations and a high degree of
-    flexibility, given that either IO bandwidth or the bandwidth between sockets can be
-    optimized, depending on the OEM requirements. The most likely configuration is that the
-    number of PCIe links will be the same for 1- and 2-socket machines, given that some
-    lanes per socket will be used for inter-socket communication. While some links must be
-    used for inter-socket communication, adding a socket does not compromise the number of
-    available IO channels. The exact configuration used depends on the platform.</para>
+    <para>There are up to 128 IO lanes supporting PCIe Gen 6.0 plus 16 lanes of PCI Gen4, though the
+    actual maximum might be lower depending on socket configuration. Lanes can be used as Infinity
+    links, PCI Express links, SATA links or CXL 3.1 links. This allows very large IO configurations
+    and a high degree of flexibility, given that either IO bandwidth or the bandwidth between
+    sockets can be optimized, depending on the OEM requirements. The most likely configuration is
+    that the number of PCIe links will be the same for 1- and 2-socket machines, given that some
+    lanes per socket will be used for inter-socket communication. While some links must be used for
+    inter-socket communication, adding a socket does not compromise the number of available IO
+    channels. The exact configuration used depends on the platform.</para>
 
   </sect1>
 
   <sect1 xml:id="sec-memory-zen6c-variant">
-    <title>AMD EPYC 9006 Series Processors (Zen 6c cores)</title>
+    <title>AMD EPYC 9006 Series Processors (Zen6c cores)</title>
 
-    <para>The AMD EPYC 9006 Series Processors based on Zen 6c cores launched in 2026. While
-    the fundamental microarchitecture is based on the <quote>Zen 6</quote> compute core, it
-    is optimized for density and efficiency.  Its physical layout takes less space and is
-    designed to deliver more performance per watt.  There are some other important
-    differences between it and the AMD EPYC 9006 Series Processors based on Zen 6
-    cores. Both processors are socket-compatible, have the same number of memory channels
-    and the same number of I/O lanes. This means that the processors may be used
-    interchangeably on the same platform with the same limitation that dual-socket
-    configurations must use identical processors. Both processors use the same
-    <emphasis>Instruction Set Architecture (ISA)</emphasis>. This means that code optimized
-    for one processor will run without modification on the other.</para>
+    <para>The AMD EPYC 9006 Series Processors based on Zen6c Dense cores launched in 2026. While the
+    fundamental microarchitecture is based on the <quote>Zen 6</quote> compute core, it is optimized
+    for density and efficiency.  Its physical layout takes less space and is designed to deliver
+    more performance per watt.  There are some other important differences between it and the AMD
+    EPYC 9006 Series Processors based on Zen 6 cores. Both processors are socket-compatible, have
+    the same number of memory channels and the same number of I/O lanes. This means that the
+    processors may be used interchangeably on the same platform with the same limitation that
+    dual-socket configurations must use identical processors. Both processors use the same
+    <emphasis>Instruction Set Architecture (ISA)</emphasis>. This means that code optimized for one
+    processor will run without modification on the other.</para>
 
-    <para>Despite the compatible ISA, the processors are physically different using a
-    manufacturing process focused on increased density for both the CPU core and the
-    physical cache. The L1 and L2 caches have the same capacity. The L3 cache capacity per
-    core is smaller than the capacity of the AMD EPYC 9006 Series Processors based on Zen 6
-    cores as there are more cores placed on each CCD. The basic CCX structure in both
-    processors is similar but each CCD with Zen 6c has 32 cores instead of 12.  This
-    increases the maximum number of cores per socket from 96 cores to 256 cores (512 threads).
+    <para>Despite the compatible ISA, the processors are physically different using a manufacturing
+    process focused on increased density for both the CPU core and the physical cache. The basic CCX
+    structure in both processors is similar but each CCD with Zen 6c has 32 cores instead of 12.
+    This increases the maximum number of cores per socket from 96 to 256 (512 threads).  The L1 and
+    L2 caches have the same capacity.  Differently from the previous generation where the higher
+    number of cores in the more dense variant potentially reduced the amount of L3 cache available
+    per core, the Zen6c CCX supports up to 128 MB of L3 cache per CCX, meaning that even on a full
+    32 core-per-CCX configuration, it may still provide the same 4MB L3 cache size per core as the
+    Zen6 configuration.
 
-    Finally, the <emphasis>Thermal Design Points (TDPs)</emphasis> differ for Zen 6c cores,
-    with different frequency scaling limits and generally a lower peak frequency. While
-    each individual Zen 6c core may achieve less peak performance than the Zen 6 core, the
-    total peak compute throughput available is higher because of the increased number of
-    cores.</para>
+    Finally, the <emphasis>Thermal Design Points (TDPs)</emphasis> differ for Zen 6c cores, with
+    different frequency scaling limits and generally a lower peak frequency. While each individual
+    Zen 6c core may achieve less peak performance than the Zen 6 core, the total peak compute
+    throughput available is higher because of the increased number of cores.</para>
 
-    <para>The intended use case and workloads determine which processor is superior. The
-    key advantage of the AMD EPYC 9006 Series Processors based on Zen 6c cores is packing
-    more cores within the same socket. This may benefit cloud or hyperscale environments in
-    that more containers or virtual machines can use uncontested CPUs for their workloads
-    within the same physical machine. As a result, physical space in data centers can
-    potentially be reduced. It may also benefit some HPC workloads that are primarily CPU
-    and memory bound.  For example, some HPC workloads scale to the number of available
-    cores working on data sets that are too large to fit into a typical cache. For such
-    workloads, the AMD EPYC 9006 Series Processors based on Zen 6c cores may be
-    ideal.</para>
+    <para>The intended use case and workloads determine which processor is superior. The key
+    advantage of the AMD EPYC 9006 Series Processors based on Zen 6c cores is packing more cores
+    within the same socket. This may benefit cloud or hyperscale environments in that more
+    containers or virtual machines can use uncontested CPUs for their workloads within the same
+    physical machine. As a result, physical space in data centers can potentially be reduced. It may
+    also benefit some HPC workloads that are primarily CPU and memory bound.  For example, some HPC
+    workloads scale to the number of available cores working on data sets that are too large to fit
+    into a typical cache. For such workloads, the AMD EPYC 9006 Series Processors based on Zen 6c
+    cores may be ideal.</para>
 
   </sect1>
 
@@ -333,9 +325,14 @@
 
     <para><xref linkend="fig-epyc-topology"/> shows the topology of an
     example two socket Zen 6c machine with a fully populated memory
-    configuration generated with <command>"lstopo-no-graphics --of svg >
-    image.svg"</command>.  The <package>lstopo</package> tool is
-    part of the <package>hwloc</package> package.
+    configuration generated with the command </para>
+
+    <screen>
+      lstopo-no-graphics --of svg > image.svg"
+    </screen>
+
+    <para>The <package>lstopo</package> tool is part of the <package>hwloc</package> package.
+    </para>
 
     <figure xml:id="fig-epyc-topology">
       <title>AMD EPYC 9006 Series Processors based on Zen 6c cores Topology</title>
@@ -348,18 +345,16 @@
         </imageobject>
       </mediaobject>
     </figure>
-
-    The two <quote>packages</quote> correspond to the two sockets. The
-    CCXs consisting of 32 cores (64 threads) each should be clear, as
-    each CCX/CCD has one L3 cache and each socket has 8 CCX/CCD
-    resulting in 256 cores (512 threads). The links to the IO die are
-    symmetrical to all CCD in the package, but the IO die should be
-    taken into account when splitting a workload to optimize bandwidth
-    to memory. In an example where the IO channels are not heavily used,
-    the focus should be on placing memory related tasks closer, with
-    respect to the cache hierarchy.  If optimizing for IO, though, it is
-    recommended that, where possible, the workload is located on the
-    nodes local to the IO channel.</para>
+    <para>
+    The two large colored blocks, titled <quote>packages</quote>, correspond to the two sockets. The
+    individuals CCDs, titled <quote>Die</quote>, consisting of 32 cores each should be clear, as
+    each CCX/CCD has one L3 cache associated with it.  It is also possible to observe that each
+    socket has 8 CCX/CCD resulting in 256 cores in total (512 threads). The links to the I/O dies are
+    symmetrical to CCDs in the package, but the IO die should be taken into account when
+    splitting a workload to optimize bandwidth to memory. In an example where the I/O channels are
+    not heavily used, the focus should be on placing memory related tasks closer, with respect to
+    the cache hierarchy.  If optimizing for I/O, though, it is recommended that, where possible, the
+    workload is located on the nodes local to the I/O channel.</para>
 
     <para>The computer output below shows a conventional view of the topology using the
     <package>numactl</package> tool which is slightly edited for clarity. The CPU IDs that
