@@ -237,15 +237,15 @@
 
     <para>The central I/O dies are two identical interconnection fabrics dedicated to control and
     route data between CCDs and memory, I/O devices or even other processor sockets.  While each CCD
-    has a dedicated interconnect link to an IO die, they also interconnect directly with each other
+    has a dedicated interconnect link to an I/O die, they also interconnect directly with each other
     via the AMD Infinity Fabric link.  This architecture is much simpler than the first generation
     of AMD EPYC processors which had separate memory channels per die and links between dies giving
     two levels of NUMA distance within a single socket and a third distance when communicating
-    between sockets. With the consolidation of the IO die after the third generation, the NUMA
+    between sockets. With the consolidation of the I/O die after the third generation, the NUMA
     distance became more similar across all cpus, which makes it easier to tune and optimize. The
     NUMA distances are the same from 3rd to 6th Generation AMD EPYC Processors.</para>
 
-    <para>The IO dies have a total of 16 memory controllers supporting DDR5 <emphasis
+    <para>The I/O dies have a total of 16 memory controllers supporting DDR5 <emphasis
     role="italic">Dual Inline Memory Modules (DIMMs)</emphasis> with the maximum supported speed
     expected to be DDR5-8000 or JEDEC-standard second-generation MRDIMM 12.8G announced, at the time
     of writing. This implies a peak channel bandwidth of up to 1 TB/sec memory bandwidth across a
@@ -266,23 +266,28 @@
     minimizing access is not only important from a memory access latency point of view, but it also
     has an impact on the speed of individual cores.</para>
 
-    <para>There are up to 128 IO lanes supporting PCIe Gen 6.0 plus 16 lanes of PCI Gen4, though the
-    actual maximum might be lower depending on socket configuration. Lanes can be used as Infinity
-    links, PCI Express links, SATA links or CXL 3.1 links. This allows very large IO configurations
-    and a high degree of flexibility, given that either IO bandwidth or the bandwidth between
-    sockets can be optimized, depending on the OEM requirements. The most likely configuration is
-    that the number of PCIe links will be the same for 1- and 2-socket machines, given that some
-    lanes per socket will be used for inter-socket communication. While some links must be used for
-    inter-socket communication, adding a socket does not compromise the number of available IO
-    channels. The exact configuration used depends on the platform.</para>
+    <para>There are up to 96 configurable I/O lanes supporting PCIe Gen 6.0/CXL 3.1 (128 lanes in
+    dual-socket platforms), plus 8 lanes of PCI Gen4, though the actual maximum might be lower
+    depending on socket configuration. Lanes can be used as Infinity links, PCI Express links, SATA
+    links or CXL 3.1 links. This allows very large I/O configurations and a high degree of
+    flexibility, given that either I/O bandwidth or the bandwidth between sockets can be optimized,
+    depending on the OEM requirements. The most likely configuration is that the number of PCIe
+    links will be the same for 1- and 2-socket machines, given that some lanes per socket will be
+    used for inter-socket communication. While some links must be used for inter-socket
+    communication, adding a socket does not compromise the number of available I/O channels. The
+    exact configuration used depends on the platform.</para>
 
+    <para>Finally, the 6th Generation EPYC processors also introduce Instruction Set Architecture
+    (ISA) updates relevant to performance, such as the half-precision floating-point (FP16) and Page
+    Modification Logging (PML) extensions.  While ISA changes are out of scope for this manual, we
+    recommend referring to the AMD64 Architecture Programmer's Manuals for more information.</para>
   </sect1>
 
   <sect1 xml:id="sec-memory-zen6c-variant">
     <title>AMD EPYC 9006 Series Processors (Zen6c cores)</title>
 
     <para>The AMD EPYC 9006 Series Processors based on Zen6c Dense cores launched in 2026. While the
-    fundamental microarchitecture is based on the <quote>Zen 6</quote> compute core, it is optimized
+    fundamental microarchitecture is based on the Zen 6 compute core, it is optimized
     for density and efficiency.  Its physical layout takes less space and is designed to deliver
     more performance per watt.  There are some other important differences between it and the AMD
     EPYC 9006 Series Processors based on Zen 6 cores. Both processors are socket-compatible, have
@@ -350,7 +355,7 @@
     individuals CCDs, titled <quote>Die</quote>, consisting of 32 cores each should be clear, as
     each CCX/CCD has one L3 cache associated with it.  It is also possible to observe that each
     socket has 8 CCX/CCD resulting in 256 cores in total (512 threads). The links to the I/O dies are
-    symmetrical to CCDs in the package, but the IO die should be taken into account when
+    symmetrical to CCDs in the package, but the I/O die should be taken into account when
     splitting a workload to optimize bandwidth to memory. In an example where the I/O channels are
     not heavily used, the focus should be on placing memory related tasks closer, with respect to
     the cache hierarchy.  If optimizing for I/O, though, it is recommended that, where possible, the
@@ -508,8 +513,8 @@ epyc:~ # taskset -c `cat /sys/devices/system/cpu/cpu1/cache/index3/shared_cpu_li
 
       <para>The first to watch for is remote memory nodes being used when the process is not
         allowed to run on CPUs local to that node. The scenarios where this can occur
-        are outside the scope of this paper. However, a common reason is an IO-bound thread
-        communicating with a kernel I/O thread on a remote node bound to the IO controller.
+        are outside the scope of this paper. However, a common reason is an I/O-bound thread
+        communicating with a kernel I/O thread on a remote node bound to the I/O controller.
         In such a setup, the data buffers managed by the application are stored in remote memory
         incurring a higher access cost for each I/O.</para>
 
@@ -589,7 +594,7 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
 
     <para>High performance storage devices like <emphasis role="italic">Non-Volatile Memory Express
         (NVMe)</emphasis> or <emphasis role="italic">Serial Attached SCSI (SAS)</emphasis>
-      controller are designed to take advantage of parallel IO submission. These devices typically
+      controller are designed to take advantage of parallel I/O submission. These devices typically
       support a large number of submit and receive queues, which are tied to <emphasis role="italic"
         >MSI-X</emphasis> interrupts. Ideally, these devices should provide as many MSI-X vectors as
       there are CPUs in the system. To achieve the best performance, each MSI-X vector should be assigned
@@ -648,7 +653,7 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
       multiple times to ensure that the result is reproducible and reliable within reasonable
       boundaries. When that is established, analyze how the workload is using different system
       resources to determine what area should be the focus. The focus in this paper is on how
-      CPU and memory is used. But other evaluations may need to consider the IO subsystem,
+      CPU and memory is used. But other evaluations may need to consider the I/O subsystem,
       network subsystem, system call interfaces, external libraries, etc. The methodologies
       that can be employed to conduct this are outside the scope of this paper. But the book
       <quote>Systems Performance: Enterprise and the Cloud</quote> by Brendan Gregg (see <link
@@ -909,7 +914,7 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
         of the workload exceeds all available memory. It can only be alleviated by tuning
         the application to use less memory or increasing the amount of RAM available.</para>
 
-      <para>A more generalized view of resource pressure for CPU, memory and IO can be
+      <para>A more generalized view of resource pressure for CPU, memory and I/O can be
         measured using the kernel <emphasis role="italic">Pressure
         Stall Information</emphasis> feature enabled with the command
         line <command>psi=1</command>. When enabled, proc files under
@@ -929,13 +934,13 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
       <title>Other resources</title>
 
       <para>The analysis of other resources is outside the scope of this paper. However,
-        a common scenario is that an application is IO-bound. A superficial check can be made
+        a common scenario is that an application is I/O-bound. A superficial check can be made
         using the <command>vmstat</command> tool. This tool checks what percentage of CPU time
         is spent idle combined with the number of processes that are blocked and the values in
         the <emphasis role="strong">bi</emphasis> and <emphasis role="strong">bo</emphasis>
-        columns. Similarly, if PSI is enabled, then the IO pressure file will show whether
+        columns. Similarly, if PSI is enabled, then the I/O pressure file will show whether
         some or all active tasks are losing time because of lack of resources. Further analysis
-        is required to determine if an application is IO rather than CPU- or memory-bound.
+        is required to determine if an application is I/O rather than CPU- or memory-bound.
         However, this is a sufficient check to start with. </para>
 
     </sect2>
@@ -1332,40 +1337,34 @@ Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C
   <sect1 xml:id="sec-compiler">
     <title>Compiler selection</title>
 
-    <para>SUSE Linux Enterprise ships with multiple versions of
-    GCC. SUSE Linux Enterprise 16.1 ships with <package>GCC 15</package>
-    which at the time of writing is <package>GCC 15.3.0</package> with
-    the package version <package>15-160100.2.1</package>. The intention
-    is to avoid unintended consequences when porting code that may
-    affect the building and operation of applications. The <package>GCC
-    15</package> development originally started in 2024, with a branch
-    created in 2025 and <package>GCC 15.3</package> released in
-    2026. This means that the system compiler has no awareness of the
-    AMD EPYC 9006 Series processors.</para>
+    <para>SUSE Linux Enterprise ships with multiple versions of GCC. SUSE Linux Enterprise 16.1
+    ships with <package>GCC 15</package> which at the time of writing is <package>GCC
+    15.3.0</package> with the package version <package>15-160100.2.1</package>. The intention is to
+    avoid unintended consequences when porting code that may affect the building and operation of
+    applications. The <package>GCC 15</package> development originally started in 2024, with a
+    branch created in 2025 and <package>GCC 15.3</package> released in 2026. This means that the
+    system compiler has no awareness of the AMD EPYC 9006 Series processors.</para>
 
-    <para>This compiler is capable of generating optimized code targeted
-    at the 5th Generation AMD EPYC Processor using the
-    <filename>znver5</filename> target.  It also provides additional
-    support for <package>OpenMP 5.2</package> and limited support of
-    <package>OpenMP 6.0</package> features. Through the Developer Tools
-    Module SUSE Linux Enterprise users can obtain newer versions of the
-    compiler with dedicated support to newer processors, such as the AMD
-    EPYC 9006 Series. It is expected that <package>GCC 17</package> will
-    be included in future releases for generating optimized code for the
-    6th Generation AMD EPYC Processor. Unfortunately, at the time of
-    writing, there is not a version of GCC available optimized for the
-    AMD EPYC 9006 Series Processor specifically.</para>
+    <para>This compiler is capable of generating optimized code targeted at the 5th Generation AMD
+    EPYC Processor using the <filename>znver5</filename> target.  It also provides additional
+    support for <package>OpenMP 5.2</package> and limited support of <package>OpenMP 6.0</package>
+    features. Through the Developer Tools Module SUSE Linux Enterprise users can obtain newer
+    versions of the compiler with dedicated support to newer processors, such as the AMD EPYC 9006
+    Series. At the time of this writing, GCC 16 packages are available in the Developer Tools
+    Modules, though it also lacks dedicated optimization support for the 6th generation EPYC
+    Processor series.  It is expected that <package>GCC 17</package> will be included in future
+    releases for generating optimized code for the 6th Generation AMD EPYC Processor. Unfortunately,
+    at the time of writing, there is not a version of GCC available optimized for the AMD EPYC 9006
+    Series Processor specifically.</para>
 
-    <para>The OS packages are built against a generic target. However,
-    where applications and benchmarks can be rebuilt from source, the
-    minimum option should be <package>-march=znver5</package> for
-    <package>GCC 15</package> and later versions of GCC.</para>
+    <para>The OS packages are built against a generic target. However, where applications and
+    benchmarks can be rebuilt from source, the minimum option should be
+    <package>-march=znver5</package> for <package>GCC 15</package> and later versions of GCC.</para>
 
-    <para>Further information on how to install the <package>Developer
-    Tools Module</package> and how to build optimized versions of
-    applications can be found in the guide <link
+    <para>Further information on how to install the <package>Developer Tools Module</package> and
+    how to build optimized versions of applications can be found in the guide <link
     xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-15/index.html">Advanced
-    optimization and new capabilities of GCC 16</link>.</para>
+    optimization and new capabilities of GCC 15</link>.</para>
 
   </sect1>
 
@@ -1373,13 +1372,13 @@ Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C
     <title>Candidate workloads</title>
 
     <para>The workloads that will benefit most from the 6th Generation AMD EPYC Processor
-      architecture are those that can be parallelized and are either memory or IO-bound. This
+      architecture are those that can be parallelized and are either memory or I/O-bound. This
       is particularly true for workloads that are <quote>NUMA friendly</quote>. They can
       be parallelized, and each thread can operate independently for most of the
       workload’s lifetime. For memory-bound workloads, the primary benefit will be taking
-      advantage of the high bandwidth available on each channel. For IO-bound workloads,
+      advantage of the high bandwidth available on each channel. For I/O-bound workloads,
       the primary benefit will be realized when there are multiple storage devices, each
-      of which is connected to the node local to a task issuing IO.</para>
+      of which is connected to the node local to a task issuing I/O.</para>
 
     <sect2 xml:id="sec-test-setup">
       <title>Test setup</title>
@@ -1627,7 +1626,7 @@ epyc:~ # perf script
       explicit placement cases. The single-threaded bandwidth for the
       basic Copy vector operation on a single core was 74.7 GB/sec. This
       is higher than the theoretical maximum of a single DIMM, but the
-      IO die interleave accesses, and caching effects and prefetch still
+      I/O die interleave accesses, and caching effects and prefetch still
       apply. The total throughput for each parallel operation with
       <parameter>SPREAD</parameter> enabled ranged from 700 GB/sec to
       800 GB/sec depending on the type of operation and how efficiently
@@ -1692,7 +1691,7 @@ epyc:~ # perf script
 
       <para>Depending on the computational kernel used, the workload may require a power-of-two
         number or a square number of processes to be used. However, note that using all available
-        CPUs can mean that the application can contend with itself for CPU time. Furthermore, as IO
+        CPUs can mean that the application can contend with itself for CPU time. Furthermore, as I/O
         may be issued to shared memory backed by disk, there are system threads that also need CPU
         time. Finally, if there is CPU contention, MPI tasks can be stalled waiting on an available
         CPU and OpenMPI may yield tasks prematurely if it detects there are more MPI tasks than CPUs
@@ -1723,8 +1722,8 @@ epyc:~ # perf script
 
       <para>As NPB uses shared files, an XFS partition was used for the temporary files. It is,
         however, only used for mapping shared files and is not a critical path for the benchmark and
-        no IO tuning is necessary. In some cases, with MPI applications, it will be possible to use a
-          <filename>tmpfs</filename> partition for OpenMPI. This avoids unnecessary IO assuming the
+        no I/O tuning is necessary. In some cases, with MPI applications, it will be possible to use a
+          <filename>tmpfs</filename> partition for OpenMPI. This avoids unnecessary I/O assuming the
         increased physical memory usage does not cause the application to be paged out.</para>
 
       <table>
@@ -1965,15 +1964,14 @@ epyc:~ # perf script
   <sect1 xml:id="sec-conclusion">
     <title>Conclusion</title>
 
-    <para>The introduction of the AMD EPYC 9006 Series Processors continues to push
-      the boundaries of what is possible for memory and
-      IO-bound workloads with significantly higher bandwidth and an increased number of channels. A
-      properly configured and tuned workload can exceed the performance of many contemporary
-      off-the-shelf solutions even when fully customized. The symmetric and balanced nature
-      of the machine makes the task of tuning a workload considerably easier, given that
-      each partition can have symmetric performance. And this is a property that can turn
-      out particularly handy in virtualization, as each virtual machine can be assigned
-      to each one of the partitions.</para>
+    <para>The introduction of the AMD EPYC 9006 Series Processors continues to push the boundaries
+    of what is possible for memory and I/O-bound workloads with significantly higher bandwidth and
+    an increased number of channels. A properly configured and tuned workload can exceed the
+    performance of many contemporary off-the-shelf solutions even when fully customized. The
+    symmetric and balanced nature of the machine makes the task of tuning a workload considerably
+    easier, given that each partition can have symmetric performance. And this is a property that
+    can turn out particularly handy in virtualization, as each virtual machine can be assigned to
+    each one of the partitions.</para>
 
     <para>With SUSE Linux Enterprise 16.1, all the tools to monitor and tune a workload
       are readily available. You can extract the maximum performance and
@@ -1989,12 +1987,12 @@ epyc:~ # perf script
 
     <itemizedlist>
       <listitem>
-        <para>AMD EPYC 9006 Series Architecture Overview XXXXXX (<link
-            xlink:href="https://www.amd.com/content/dam/amd/en/documents/epyc-technical-docs/user-guides/58462_amd-epyc-9006-tg-architecture-overview.pdf"
+        <para>AMD EPYC 9006 Series Architecture Overview (<link
+            xlink:href="https://docs.amd.com/v/u/en-US/73202-amd-epyc-9006-series-server-cpus-architecture-overview"
             />)</para>
       </listitem>
       <listitem>
-        <para>AMD Socket SP7 Power and Performance Optimization Guide for Family 1Ah Models 50h–57h XXXXXX (<link
+        <para>AMD Socket SP7 Power and Performance Optimization Guide for Family 1Ah Models 50h–57h (<link
             xlink:href="https://devhub.amd.com//wp-content/uploads/Docs/58412_0.78.pdf"
             />)</para>
       </listitem>
@@ -2023,6 +2021,11 @@ epyc:~ # perf script
         <para>Advanced Optimization and New Capabilities of GCC 11 (<link
             xlink:href="https://documentation.suse.com/sbp/devel-tools/html/SBP-GCC-11/index.html"
             />)</para>
+      </listitem>
+
+      <listitem>
+        <para>AMD64 Architecture Programmer's Manuals (<link
+            xlink:href="https://www.amd.com/en/support/tech-docs/amd64-architecture-programmers-manual-volumes-1-5"/>)</para>
       </listitem>
       <listitem>
         <para>Systems Performance: Enterprise and the Cloud by Brendan Gregg 2nd Edition(<link
