@@ -45,6 +45,26 @@
     <authorgroup>
       <author>
         <personname>
+          <firstname>Gabriel</firstname>
+	  <surname>Krisman Bertazi</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Senior Kernel Engineer</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
+          <firstname>Dario</firstname>
+	        <surname>Faggioli</surname>
+        </personname>
+        <affiliation>
+          <jobtitle>Virtualization Specialist</jobtitle>
+          <orgname>SUSE</orgname>
+        </affiliation>
+      </author>
+      <author>
+        <personname>
           <firstname>Yousaf</firstname>
           <surname>Kaukab</surname>
         </personname>
@@ -80,26 +100,6 @@
         </personname>
         <affiliation>
           <jobtitle>Tool Chain Developer</jobtitle>
-          <orgname>SUSE</orgname>
-        </affiliation>
-      </author>
-      <author>
-        <personname>
-          <firstname>Dario</firstname>
-	        <surname>Faggioli</surname>
-        </personname>
-        <affiliation>
-          <jobtitle>Virtualization Specialist</jobtitle>
-          <orgname>SUSE</orgname>
-        </affiliation>
-      </author>
-      <author>
-        <personname>
-          <firstname>Gabriel</firstname>
-          <surname>Krisman Bertazi</surname>
-        </personname>
-        <affiliation>
-          <jobtitle>Senior Kernel Engineer</jobtitle>
           <orgname>SUSE</orgname>
         </affiliation>
       </author>
@@ -198,7 +198,7 @@
     previous.  Modern processors also commonly employ <emphasis role="italic">Symmetric
     multithreading (SMT)</emphasis> technology, where each core actually has multiple execution
     threads (sibling threads) with resources shared between the siblings.  As a result, transfers
-    between some CPUS and memory pairs are executed much faster than others, depending on their
+    between some CPUs and memory pairs are executed much faster than others, depending on their
     physical location, even though they might appear logically to be inside the same package from a
     user point of view.  A performance-focused developer must take these specific
     micro-architectural details into account and tune their application accordingly in order to
@@ -511,12 +511,12 @@ epyc:~ # taskset -c `cat /sys/devices/system/cpu/cpu1/cache/index3/shared_cpu_li
 
       <para>There are three major hazards to consider with CPU binding.</para>
 
-      <para>The first to watch for is remote memory nodes being used when the process is not
-        allowed to run on CPUs local to that node. The scenarios where this can occur
-        are outside the scope of this paper. However, a common reason is an I/O-bound thread
-        communicating with a kernel I/O thread on a remote node bound to the I/O controller.
-        In such a setup, the data buffers managed by the application are stored in remote memory
-        incurring a higher access cost for each I/O.</para>
+      <para>The first to watch for is remote memory nodes being used when the process is not allowed
+      to run on CPUs local to that node. The scenarios where this can occur are outside the scope of
+      this guide. However, a common reason is an I/O-bound thread communicating with a kernel I/O
+      thread on a remote node bound to the I/O controller.  In such a setup, the data buffers
+      managed by the application are stored in remote memory incurring a higher access cost for each
+      I/O.</para>
 
       <para>While tasks may be bound to CPUs, the resources they are accessing, such as network or
       storage devices, may not have interrupts routed locally. <package>irqbalance</package>
@@ -740,13 +740,13 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
         <command>thp_split</command> and <command>thp_collapse_alloc</command> counters
         in <filename>/proc/vmstat</filename>.</para>
 
-      <para>Workloads that sparsely address large mappings may have a higher memory
-        footprint when using THP. This could result in premature reclaim or fallback to
-        remote nodes. An example would be HPC workloads operating on large sparse matrices. If
-        memory usage is much higher than expected, compare memory usage with and without
-        THP to decide if the trade-off is not worthwhile. This may be critical on AMD EPYC
-        7003, 9004 and 9006 Series Processor given that any spillover will congest the Infinity
-        links and potentially cause cores to run at a lower frequency. </para>
+      <para>Workloads that sparsely address large mappings may have a higher memory footprint when
+      using THP. This could result in premature reclaim or fallback to remote nodes. An example
+      would be HPC workloads operating on large sparse matrices. If memory usage is much higher than
+      expected, compare memory usage with and without THP to decide if the trade-off is not
+      worthwhile. This may be critical on AMD EPYC 9006 Series Processor given that any spillover
+      could congest the Infinity links and potentially cause cores to run at a lower
+      frequency. </para>
 
       <note>
         <title>Sparsely addressed memory</title>
