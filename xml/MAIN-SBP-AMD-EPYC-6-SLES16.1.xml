@@ -949,119 +949,112 @@ epyc:~ # echo 0-3 > /proc/irq/117/smp_affinity_list</screen>
   <sect1 xml:id="sec-power-management">
     <title>Power management</title>
 
-    <para>Modern CPUs balance power consumption and performance by
-    varying the operating clock frequency and voltage based on the
-    historical utilization and the requisites of the current workload.
-    Usually, the platform firmware and the operating system cooperate to
-    define the appropriate balance between power consumption and
-    performance while staying within the thermal envelope of the system.
-    The scaling calculation is further complicated by the fact that, if
-    individual cores are idle and running at low power, the additional
-    power can be used to boost the performance of active cores. This
-    means it  is never a straightforward balance between power
-    consumption and performance. More complexity is added between the
-    AMD EPYC 7003 and the 9006 Series Processors whereby spare power may
-    be used to boost either cores or the Infinity links.</para>
+    <para>Modern CPUs balance power consumption and performance by varying the operating clock
+    frequency and voltage based on the historical utilization and the requisites of the current
+    workload.  Usually, the platform firmware and the operating system cooperate to define the
+    appropriate balance between power consumption and performance while staying within the thermal
+    envelope of the system.  The scaling calculation is further complicated by the fact that, if
+    individual cores are idle and running at low power, the additional power can be used to boost
+    the performance of active cores. This means it is never a straightforward balance between power
+    consumption and performance. More complexity is added between the AMD EPYC 7003 and the 9006
+    Series Processors whereby spare power may be used to boost either cores or the Infinity Fabric
+    within the socket.</para>
 
-    <para>The 6th Generation AMD EPYC Processor is capable of making
-    adjustments to voltage and frequency on a much more fine-grained and
-    continuous levels than the old ACPI-based P-state levels approach in
-    previous generations, by using the dedicated Collaborative Processor
-    Performance Control (CPPC) interface available in the platform.  On
-    SUSE Linux Enterprise Server 16.1, the cpufreq subsystem uses the
-    <command>amd-pstate</command> driver by default for AMD EPYC 9006
-    Series Processors.  This driver leverages the CPPC with Energy
-    Performance Preference (EPP) hints to select appropriate hardware
-    frequencies for the workload. The <command>amd-pstate</command>
-    driver can be configured to operate in 3 different modes: Active
-    (default), Passive and Guided: </para>
+    <para>The 6th Generation AMD EPYC Processor is capable of making adjustments to voltage and
+    frequency on a much more fine-grained and continuous levels than the old ACPI-based P-state
+    levels approach in previous generations, by using the dedicated Collaborative Processor
+    Performance Control (CPPC) interface available in the platform.  On SUSE Linux Enterprise Server
+    16.1, the cpufreq subsystem uses the <command>amd-pstate</command> driver by default for AMD
+    EPYC 9006 Series Processors.  This driver leverages the CPPC interface to provide instructions
+    to the hardware about the desired bias towards either performance or energy efficiency and about
+    minimum/maximum performance requirements.  The bias is defined by the Energy Performance
+    Preference (EPP) value.  The firmware then uses such hints to select appropriate hardware
+    frequencies for the workload.</para>
 
-    <itemizedlist>
-      <listitem>
-	<para>In the Active mode, the driver just provides a
-	hint about the desired performance mode to the CPPC, which is the
-	sole responsible for calculating the runtime workload and
-	adjusting the realtime cores frequency according to the power
-	supply and thermal, core voltage and some other hardware
-	conditions. This is the default mode.</para>
-      </listitem>
-      <listitem>
-	<para>
-	  In the Passive mode, the Linux driver defines a finer-grained
-	  percentage target of the nominal maximum performance of the
-	  CPU and the CPPC will attempt to scale frequency to reach that
-	  performance or higher, while still bounded by the thermal
-	  requirements of the platform.
-	</para>
-      </listitem>
-      <listitem>
-	<para>
-	  In the Guided mode, the driver requests minimum and maximum
-	  performance level and the platform autonomously selects a
-	  frequency in this range that is appropriate to the current
-	  workload.
-	</para>
-      </listitem>
-    </itemizedlist>
+    <para>The preferred way to use the <command>amd-pstate</command> driver is in the
+    <command>Active</command> mode, which is the default.  Under this operation mode, the driver
+    just provides the hint about the desired performance mode to the CPPC, which is the sole
+    responsible for calculating the runtime load and adjusting the real-time cores frequency
+    according to the power supply and thermal conditions, core voltage and some other hardware
+    conditions.</para>
 
-    <para>
-      The amd-pstate driver can be used with all available frequency
-      policies in the system.  It will inform the cpufreq governor of
-      maximum and minimum operating frequencies supported by the
-      hardware and configure the firmware accordingly.</para>
+    <para>When in <command>Active</command> mode, two governors are supported by the Operating
+    System: <command>Performance</command> (default) and <command>powersave</command>. They serve as
+    a collection of preset parameters provided by the driver to the platform.  The
+    <command>performance</command> governor asks the platform to keep CPU clock at or above the
+    nominal frequency, and sets EPP to the most performance-oriented value. The
+    <command>powersave</command> governor asks for the CPU clock to stay at or above the lowest
+    frequency at which better than linear power savings are achieved, and allows the user to choose
+    between several values for EPP: "performance", "balance_performance", "balance_power" or
+    "power", in increasing order of bias towards energy efficiency.</para>
 
-    <note>
-      <title>Configuring and verifying the amd-pstate mode</title>
-
-      <para>The current configured mode of the amd-pstate driver can be
-      discovered and modified by reading and writing from  /sys/devices/system/cpu/amd_pstate/status</para>
-      <screen>
-	$ cat /sys/devices/system/cpu/amd_pstate/status
-	active
-
-	$ echo guided > /sys/devices/system/cpu/amd_pstate/status
-	$ cat /sys/devices/system/cpu/amd_pstate/status
-	guided
-      </screen>
+    <note><para> If tuning CPU frequency management to reduce power consumption is appropriate, the
+    <command>powersave</command> governor can be selected using the <command>cpupower</command>
+    command.  Available EPP values are shown in the
+    <filename>energy_performance_available_preferences</filename> file for each CPU, under the
+    <filename>/sys/devices/system/cpu/cpu*/cpufreq</filename> directory. Under the same directory,
+    the EPP value can be read and set using the <filename>energy_performance_preference</filename>
+    file. SMT siblings should always be assigned the same EPP. Persisting the change across reboots
+    can be done via a local init script, via udev or via one-shot systemd service file if
+    necessary.</para>
+    <screen>
+# Select the powersave governor
+epyc:~ # cpupower frequency-set -g powersave
+# Find available EPP preset values of CPU 0
+epyc:~ # cd /sys/devices/system/cpu/cpu0/cpufreq
+epyc:~ # cat energy_performance_available_preferences
+# Set an EPP for CPU 0 using the preset
+default performance balance_performance balance_power power custom dynamic
+epyc:~ # echo balance_power > energy_performance_preference
+</screen>
     </note>
 
-    <para>It is not always that power management is a relevant factor
-    for a workload. A single thread workload that is CPU-bound is likely
-    to run at the highest frequency on a single core. But a workload
-    that does not communicate heavily with other processes and is mostly
-    CPU-bound is unlikely to experience any side effects due to power
-    management. The exceptions are when load balancing moves tasks away
-    from active CPUs if there is a compute imbalance between NUMA nodes
-    or the machine is heavily overloaded.</para>
+    <para> The amd-pstate driver has two additional modes of operation: <command>Guided</command>
+    and <command>Passive</command>. When compared to the <command>Active</command> mode, these grant
+    more control to the OS at the expense of being slower to react to load changes, and potentially
+    reducing the degree of coordination between core frequency and other socket power states such as
+    data fabric and memory clocks.  With Guided mode, the OS continuously adjusts the minimum
+    frequency requested to CPPC. Conversely, with <command>Active</command> mode the minimum is kept
+    constant on a fixed value as previously described.  In both Active and Guided mode the firmware
+    will autonomously scale core frequency within the range it has been given.  With Passive mode,
+    the firmware autonomous scaling capability for cores is disabled, and the OS requests explicit
+    frequency targets.</para>
 
-    <para>The workloads that are most likely to be affected by power
-    management are those that synchronously communicate between multiple
-    threads, idle frequently and/or have low CPU utilization overall.
-    Power management overhead will be further compounded if the threads
-    are sensitive to wakeup latency.</para>
+    <note><para>While <command>Guided</command> and <command>Passive</command> modes yield more
+    control of the frequency to the operating system, the firmware is usually better positioned to
+    react to sudden load changes when defining and scaling frequencies.  SUSE recommends that
+    customers rely on the <command>Active</command> mode by default, unless there are specific
+    reasons where another mode is required for a specific workload, and only after such workload has
+    been properly validated with those modes.</para></note>
 
-    <para>Power management is critical not only to reduce power-related
-    costs, but because power saved from idling inactive cores can be
-    used to boost the performance of active cores. On the other side,
-    low utilization tasks may take longer to complete if the task is not
-    active long enough for the CPU to run at a high frequency. In some
-    cases, problems can be avoided by configuring a workload to use the
-    minimum number of CPUs necessary for its active tasks. Deciding that
-    requires monitoring the power state of CPUs.</para>
+    <para>It is not always that power management is a relevant factor for a workload. A single
+    thread workload that is CPU-bound is likely to run at the highest frequency on a single
+    core. But a workload that does not communicate heavily with other processes and is mostly
+    CPU-bound is unlikely to experience any side effects due to power management. The exceptions are
+    when load balancing moves tasks away from active CPUs if there is a compute imbalance between
+    NUMA nodes or the machine is heavily overloaded.</para>
 
-    <para>The P-State and C-State of each CPU can be examined using the
-    <command>turbostat</command> utility. The computer output below
-    shows an example, slightly edited to fit the page, where a workload
-    is busy on CPU 0 and other workloads are idle. A useful exercise is
-    to start a workload and monitor the output of
-    <command>turbostat</command> paying close attention to CPUs that
-    have moderate utilization and running at a lower frequency. If the
-    workload is latency-sensitive, it is grounds for either minimizing
-    the number of CPUs available to the workload or configuring power
-    management.</para>
+    <para>The workloads that are most likely to be affected by power management are those that
+    synchronously communicate between multiple threads, idle frequently and/or have low CPU
+    utilization overall.  Power management overhead will be further compounded if the threads are
+    sensitive to wakeup latency.</para>
+
+    <para>Power management is important not only to reduce power-related costs, but because power
+    saved from idling inactive cores can be used to boost the performance of active cores. On the
+    other side, low utilization tasks may take longer to complete if the task is not active long
+    enough for the CPU to run at a high frequency. In some cases, problems can be avoided by
+    configuring a workload to use the minimum number of CPUs necessary for its active
+    tasks. Deciding that requires monitoring the power state of CPUs.</para>
+
+    <para>The P-State and C-State of each CPU can be examined using the <command>turbostat</command>
+    utility. The computer output below shows an example, slightly edited to fit the page, where a
+    workload is busy on CPU 0 and other workloads are idle. A useful exercise is to start a workload
+    and monitor the output of <command>turbostat</command> paying close attention to CPUs that have
+    moderate utilization and running at a lower frequency. If the workload is latency-sensitive, it
+    is grounds for either minimizing the number of CPUs available to the workload or configuring
+    power management.</para>
 
     <screen>
-
 Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C1%
 -       -    -       -    7      0.21   3122    2846   1.68   377.36   0.00    0.00
 0       0    0  0   512   6      0.15   4099    2546   0.59   371.91   0.00    0.00
@@ -1072,40 +1065,22 @@ Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C
 0       0    0  2   2     2      0.10   2460    2546   1.48   382.58   0.00    0.00
 </screen>
 
-    <para>If tuning CPU frequency management is appropriate, the following actions can be
-      taken to set the management policy to performance using the <command>cpupower</command>
-      utility:</para>
-
-    <screen>epyc:~# cpupower frequency-set -g performance
-    Setting cpu: 0
-    Setting cpu: 1
-    Setting cpu: 2
-    ...</screen>
-
-    <para>Persisting it across reboots can be done via a local
-    <command>init</command> script, via <command>udev</command> or via
-    one-shot <command>systemd</command> service file if necessary. Note
-    that <command>turbostat</command> will still show that idling CPUs
-    use a low frequency. The impact of the policy is that a higher
-    frequency will be used as soon as possible when the CPU is
-    active. In some cases, a latency bottleneck will occur because of a
-    CPU exiting idle. If this is identified on the AMD EPYC 9006 Series
-    Processor, restrict the C-state by specifying
-    <command>processor.max_cstate=2</command>. This will prevent CPUs
-    from entering lower C-states. The availability of C-states can be
-    determined with <command>cpupower idle-info</command>. It is
-    expected on the AMD EPYC 9006 Series Processor that the exit latency
-    from C1 is very low. But by allowing C2, it reduces interference
-    from the idle loop injecting micro-operations into the pipeline and
-    should be the best state overall. It is also possible to set the max
-    idle state on individual cores using <command>cpupower
-    idle-set</command>. If SMT is enabled, the idle state should be set
-    on both siblings.</para>
+    <para>Note that <command>turbostat</command> will still show that idling CPUs use a low
+    frequency. The impact of the policy is that a higher frequency will be used as soon as possible
+    when the CPU is active. In some cases, a latency bottleneck will occur because of a CPU exiting
+    idle. If this is identified on the AMD EPYC 9006 Series Processor, restrict the C-state by
+    specifying <command>processor.max_cstate=2</command>. This will prevent CPUs from entering lower
+    C-states. The availability of C-states can be determined with <command>cpupower
+    idle-info</command>. It is expected on the AMD EPYC 9006 Series Processor that the exit latency
+    from C1 is very low. But by allowing C2, it reduces interference from the idle loop injecting
+    micro-operations into the pipeline and should be the best state overall. It is also possible to
+    set the max idle state on individual cores using <command>cpupower idle-set</command>. If SMT is
+    enabled, the idle state should be set on both siblings.</para>
 
   </sect1>
 
   <sect1 xml:id="sec-security-_mitigations">
-    <title>Security mitigation</title>
+    <title>Security issues mitigations</title>
 
     <para>On occasion, a security fix is applied to a distribution that
     has a performance impact. The most notable example is <emphasis
