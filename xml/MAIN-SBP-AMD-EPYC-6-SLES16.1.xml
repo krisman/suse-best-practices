@@ -273,9 +273,10 @@
     flexibility, given that either I/O bandwidth or the bandwidth between sockets can be optimized,
     depending on the OEM requirements. The most likely configuration is that the number of PCIe
     links will be the same for 1- and 2-socket machines, given that some lanes per socket will be
-    used for inter-socket communication. While some links must be used for inter-socket
-    communication, adding a socket does not compromise the number of available I/O channels. The
-    exact configuration used depends on the platform.</para>
+    used for inter-socket communication. Cross-socket communication is handled by up to 3 xGMI
+    (G-links) with speeds up to 64Gbps in the AMD EPYC 9006 Series Processors.  While some links
+    must be used for inter-socket communication, adding a socket does not compromise the number of
+    available I/O channels. The exact configuration used depends on the platform.</para>
 
     <para>Finally, the 6th Generation EPYC processors also introduce Instruction Set Architecture
     (ISA) updates relevant to performance, such as the half-precision floating-point (FP16) and Page
@@ -384,20 +385,60 @@ node     0    1
    1:   32   10
     </screen>
 
-    <para>Note that the two sockets displayed are masking some details. There
-       are multiple CCDs and multiple channels meaning that there are slight differences
-       in access latency even to <quote>local</quote> memory. If an application is so sensitive to
-       latency that it needs to be aware of the precise relative distances, then the
-       <emphasis role="italics">Nodes Per Socket (NPS)</emphasis> value can be adjusted
-       in the BIOS. If adjusted, <package>numactl</package> will show additional nodes
-       and the relative distances between them.</para>
-
     <para>Finally, the cache topology can be discovered in a variety of fashions. In
       addition to <package>lstopo</package> which can provide the information, the
       level, size and ID of CPUs that share cache can be identified from the files under
       <filename>/sys/devices/system/cpu/cpuN/cache</filename>.
     </para>
 
+    <sect2 xml:id="nodes-per-socket">
+      <title>Nodes per Socket</title>
+
+      <para>Note that the two sockets displayed on the previous section are still masking important
+      topology aspects of the chip, even though they accurately represent the view of the operating
+      system.  For instance, as discussed in <xref linkend="sec-epyc-architecture"/>, AMD EPYC 9006
+      Series Processors contains 2 identical I/O dies per-chip, each with 8 memory channels and an
+      interconnect in-between.  This means that, depending on the memory population and interleaving
+      access policies, there are slight differences in access latency even to <quote>local</quote>
+      memory, depending on which IOD is accessed. </para>
+
+      <para>If an application is so sensitive to latency that it needs to be aware of the precise
+      relative distances, the <emphasis role="italics">Nodes Per Socket (NPS)</emphasis> value can
+      be adjusted in the BIOS.  This setting changes the information passed by the platform to the
+      operating system, virtually slicing the chip in two or more nodes, exposing more information
+      about the actual topology to the operating system.  With a <quote>NPS=2</quote> setting, the
+      operating system will then identify two NUMA nodes per socket, each with half of the CCDs and
+      one of the two IODs.  scheduling domains will change and PCI devices will also become local to
+      only one of the nodes, depending on the device location and local memory operations will only
+      be interleaved across the controllers of each IOD.</para>
+
+      <para>Other values higher than 2 are also possible, resulting in an even more granular split
+      of the system, which in turn impact scheduling domains and memory interleaving.  Users should
+      refer to the AMD EPYC 9006 Series Architecture Overview for more information on the impacts of
+      changing the <quote>NPS</quote> setting.</para>
+
+      <para>If adjusted, <package>numactl</package> will show additional nodes and the relative distances
+      between them. For instance, if we set NPS=2 in the BIOS on the same machine from <xref linkend="fig-epyc-topology"/>, numactl will now show the following:</para>
+
+    <screen>epyc:~ # numactl --hardware
+available: 4 nodes (0-3)
+node 0 cpus:   0 .. 127 512 .. 639
+node 0 size: 515645 MB
+node 1 cpus: 128 .. 255 640 .. 767
+node 1 size: 515645 MB
+node 2 cpus: 256 .. 383 768 .. 895
+node 2 size: 515645 MB
+node 3 cpus: 384 .. 511 896 .. 1023
+node 3 size: 515645 MB
+node distances:
+node     0    1    2    3
+   0:   10   16   32    32
+   1:   16   10   32    32
+   2:   32   32   10    16
+   3:   32   32   16    10
+    </screen>
+
+    </sect2>
   </sect1>
 
 
