@@ -1918,63 +1918,12 @@ epyc:~ # perf script
     overhead or peripheral devices may prevent perfect linear scaling even for perfectly
     parallelized applications. Similarly, not all applications can scale perfectly. It is possible
     for performance to plateau and even regress as the degree of parallelization increases.</para>
-
   </sect1>
 
   <sect1 xml:id="sec-pmu-changes">
     <title>Performance Monitoring Unit changes</title>
-    <para>Support for the following Zen related perf changes are present in SUSE Linux Enterprise 16.1:</para>
-    <orderedlist>
-      <listitem>
-        <para>AMD Performance Monitoring V2 (PerfMonV2) (v5.19) Zen4+
-          <itemizedlist mark='bullet'>
-            <listitem>
-              <para>global registers allowing enabling/disabling of multiple counters concurrently (via a single MSR operation)</para>
-            </listitem>
-            <listitem>
-              <para>dynamic detection of available PMUs</para>
-            </listitem>
-          </itemizedlist>
-        </para>
-      </listitem>
-      <listitem>
-        <para>AMD Zen4 IBS extensions (v5.19 kernel, v6.0 perf userspace) Zen4+
-          <itemizedlist mark='bullet'>
-            <listitem>
-              <para>DataSrc extension allowing the source of data to be decoded.</para><para>Perf script and perf record (raw trace) will now report DataSrc details for tagged load/store operations. See perf-amd-ibs(1) for more details.</para>
-            </listitem>
-            <listitem>
-              <para>IBS L3 miss filtering.</para><para>Enabled by specifying an l3missonly=1 event parameter to perf. See perf-amd-ibs(1) for more details.</para>
-            </listitem>
-          </itemizedlist>
-        </para>
-      </listitem>
-      <listitem>
-        <para>Last Branch Record Extension v2 (LbrExtV2) (v6.1) Zen4+
-          <itemizedlist mark='bullet'>
-            <listitem>
-              <para>LBR Freeze on PMI</para>
-            </listitem>
-            <listitem>
-              <para>Hardware branch filtering providing additional specificity</para>
-            </listitem>
-            <listitem>
-              <para>Branch speculation information</para>
-            </listitem>
-          </itemizedlist>
-        </para>
-      </listitem>
-      <listitem>
-        <para>XXXXXX JSON event file updates for Zen 4 (v6.2 perf userspace) Zen4+
-          <itemizedlist mark='bullet'>
-            <listitem>
-              <para>This adds event information from the "Core Performance Monitor", "L3 Cache Performance Monitor", "Fabric Performance Monitor Counter" and "Performance Measurement" sections of the AMD Processor Programming Reference (PPR) documentation for Zen4.</para>
-            </listitem>
-          </itemizedlist>
-        </para>
-      </listitem>
-    </orderedlist>
-    <para>Please note.  Zen 6 JSON event updates (perf userspace) were added in Linux v6.10 and will be supported in a subsequent SLE release. Support for Zen 4 unified memory controller events (kernel and perf userspace) is expected to be available in a similar timeframe.</para>
+    <para> TODO: Zen6 PMU updates here </para>
+
   </sect1>
 
   <sect1 xml:id="sec-conclusion">
