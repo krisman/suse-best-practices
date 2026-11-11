@@ -1921,11 +1921,6 @@ epyc:~ # perf script
       </sect2>
   </sect1>
 
-  <sect1 xml:id="sec-pmu-changes">
-    <title>Performance Monitoring Unit changes</title>
-    <para> TODO: Zen6 PMU updates here </para>
-
-  </sect1>
   <sect1 xml:id="sec-amd-epyc2-virtualization">
     <title>Using AMD EPYC 9005 Series Processors for virtualization</title>
     <para> TODO </para>
