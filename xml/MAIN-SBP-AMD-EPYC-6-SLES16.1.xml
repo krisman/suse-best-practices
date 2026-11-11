@@ -1384,6 +1384,37 @@ Package Die L3 Core CPU Avg_MHz Busy% Bzy_MHz TSC_MHz   IPC    IRQ     POLL%   C
 
   </sect1>
 
+  <sect1 xml:id="sec-tuning-zen6c-variant">
+    <title>Tuning Zen6c Dense cores</title>
+
+    <para>As the Zen 6 and Zen 6c cores are ISA-compatible, no code tuning or compiler setting
+    changes should be necessary. For Cloud environments, partitioning or any binding of Virtual CPUs
+    to Physical CPUs may need to be adjusted to account for the increased number of cores. The
+    additional cores may also allow additional containers or virtual machines to be hosted on the
+    same physical machine without CPU contention. Similarly, the degree of parallelization for HPC
+    workloads may need to be adjusted. In cases where the workload is tuned based on the number of
+    cores, adjustments may be necessary for the changed number of cores per CCD. An exception are
+    cases where the workload already hits scaling limits.  As the size of the cache per core is
+    reduced with more cores, partitioning based on cache sizes may also need to be adjusted. In
+    cases where workloads are tuned based on the output of tools like <command>hwloc</command>,
+    they may adjust automatically but any manual partitioning should be re-examined.</para>
+
+    <para>When configuring workloads for AMD EPYC 9006 Series Processors based on either Zen 6 or
+    Zen 6c cores, the most important task is to set expectations. While super-linear scaling is
+    possible, it should not be expected. It may be possible to achieve super-linear scaling in Cloud
+    Environments for the number of instances hosted without performance loss if individual
+    containers or virtual machines are not utilizing 100% of CPU. However, it should be planned
+    carefully and tested. This would be particularly true in cases where multiple instances are
+    hosted that have different times of day or year for active phases. The normal expectation is a
+    best case of 2.67x gain for CPU-intensive workloads because of the increased number of
+    cores. But sub-linear scaling is common because of resource contention. Contention between SMT
+    siblings, memory bandwidth, memory availability, memory interconnects, thread communication
+    overhead or peripheral devices may prevent perfect linear scaling even for perfectly
+    parallelized applications. Similarly, not all applications can scale perfectly. It is possible
+    for performance to plateau and even regress as the degree of parallelization increases.</para>
+  </sect1>
+
+
   <sect1 xml:id="sec-candidate-workloads">
     <title>Candidate workloads</title>
 
@@ -1887,43 +1918,33 @@ epyc:~ # perf script
         EPYC 9006 Series Processors with <parameter>-mtune=znver4</parameter>. This can be
         used to strike a balance between excellent performance on a single CPU and great
         performance on multiple CPUs.</para>
-    </sect2>
-  </sect1>
-
-  <sect1 xml:id="sec-tuning-zen6c-variant">
-    <title>Tuning AMD EPYC 9006 Series Processors (Zen 6c cores)</title>
-
-    <para>As the Zen 6 and Zen 6c cores are ISA-compatible, no code tuning or compiler setting
-    changes should be necessary. For Cloud environments, partitioning or any binding of Virtual CPUs
-    to Physical CPUs may need to be adjusted to account for the increased number of cores. The
-    additional cores may also allow additional containers or virtual machines to be hosted on the
-    same physical machine without CPU contention. Similarly, the degree of parallelization for HPC
-    workloads may need to be adjusted. In cases where the workload is tuned based on the number of
-    cores, adjustments may be necessary for the changed number of cores per CCD. An exception are
-    cases where the workload already hits scaling limits.  As the size of the cache per core is
-    reduced with more cores, partitioning based on cache sizes may also need to be adjusted. In
-    cases where workloads are tuned based on the output of tools like <command>hwloc</command>,
-    they may adjust automatically but any manual partitioning should be re-examined.</para>
-
-    <para>When configuring workloads for AMD EPYC 9006 Series Processors based on either Zen 6 or
-    Zen 6c cores, the most important task is to set expectations. While super-linear scaling is
-    possible, it should not be expected. It may be possible to achieve super-linear scaling in Cloud
-    Environments for the number of instances hosted without performance loss if individual
-    containers or virtual machines are not utilizing 100% of CPU. However, it should be planned
-    carefully and tested. This would be particularly true in cases where multiple instances are
-    hosted that have different times of day or year for active phases. The normal expectation is a
-    best case of 2.67x gain for CPU-intensive workloads because of the increased number of
-    cores. But sub-linear scaling is common because of resource contention. Contention between SMT
-    siblings, memory bandwidth, memory availability, memory interconnects, thread communication
-    overhead or peripheral devices may prevent perfect linear scaling even for perfectly
-    parallelized applications. Similarly, not all applications can scale perfectly. It is possible
-    for performance to plateau and even regress as the degree of parallelization increases.</para>
+      </sect2>
   </sect1>
 
   <sect1 xml:id="sec-pmu-changes">
     <title>Performance Monitoring Unit changes</title>
     <para> TODO: Zen6 PMU updates here </para>
 
+  </sect1>
+  <sect1 xml:id="sec-amd-epyc2-virtualization">
+    <title>Using AMD EPYC 9005 Series Processors for virtualization</title>
+    <para> TODO </para>
+  </sect1>
+  <sect1 xml:id="sec-resource-allocation-tuning-host">
+    <title>Resources allocation and tuning of the host</title>
+    <para> TODO </para>
+  </sect1>
+  <sect1 xml:id="sec-resource-allocation-tuning-vms">
+    <title>Resources allocation and tuning of VMs</title>
+    <para> TODO </para>
+  </sect1>
+  <sect1 xml:id="sec-virtualization-test-workload-stream">
+    <title>Test VM workload: STREAM</title>
+    <para> TODO </para>
+  </sect1>
+  <sect1 xml:id="sec-virtualization-test-workload-npb">
+    <title>Test VM workload: NPB</title>
+    <para> TODO </para>
   </sect1>
 
   <sect1 xml:id="sec-conclusion">
@@ -1942,7 +1963,6 @@ epyc:~ # perf script
       are readily available. You can extract the maximum performance and
       reliability running your applications on the 6th Generation AMD EPYC Processor
       platform.</para>
-
   </sect1>
 
   <sect1 xml:id="sec-resources">
